@@ -1,0 +1,24 @@
+Artifacts + Arch + Testing
+
+
+
+
+
+-----
+
+GDB screen sharing, debug_conf.txt
+```
+lang=bash, name=Debugging, lines=20
+    debug.txt
+
+```
+
+
+-----
+
+
+
+
+-----
+
+

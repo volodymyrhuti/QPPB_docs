@@ -1,0 +1,275 @@
+[sudo] password for vova: 
++ PAUSE_ON_FAIL=no
++ VERBOSE=0
++ declare -A NETIFS
++ NETIFS[p1]=veth1
++ NETIFS[p2]=veth2
++ NETIFS[p3]=veth3
++ NETIFS[p4]=veth4
++ NETIFS[p5]=veth5
++ NETIFS[p6]=veth6
++ NETIFS[p7]=veth7
++ NETIFS[p8]=veth8
++ declare -A V4ADDRS
++ V4ADDRS[p1]=169.254.1.1
++ V4ADDRS[p2]=169.254.1.2
++ V4ADDRS[p3]=169.254.3.1
++ V4ADDRS[p4]=169.254.3.2
++ V4ADDRS[p5]=169.254.5.1
++ V4ADDRS[p6]=169.254.5.2
++ V4ADDRS[p7]=169.254.7.1
++ V4ADDRS[p8]=169.254.7.2
++ declare -A V6ADDRS
++ V6ADDRS[p1]=2001:db8:101::1
++ V6ADDRS[p2]=2001:db8:101::2
++ V6ADDRS[p3]=2001:db8:301::1
++ V6ADDRS[p4]=2001:db8:301::2
++ V6ADDRS[p5]=2001:db8:501::1
++ V6ADDRS[p6]=2001:db8:501::2
++ V6ADDRS[p7]=2001:db8:701::1
++ V6ADDRS[p8]=2001:db8:701::2
++ declare -A TEST_NET4
++ TEST_NET4[1]=169.254.101
++ TEST_NET4[2]=169.254.102
++ declare -A TEST_NET6
++ TEST_NET6[1]=2001:db8:101
++ TEST_NET6[2]=2001:db8:102
++ CONGW[1]=169.254.1.254
++ CONGW[2]=169.254.3.254
++ CONGW[3]=169.254.5.254
++ RECGW4[1]=169.254.11.254
++ RECGW4[2]=169.254.12.254
++ RECGW6[1]=2001:db8:11::64
++ RECGW6[2]=2001:db8:12::64
++ declare -A TEST_NET4IN6IN6
++ TEST_NET4IN6[1]=10.1.1.254
++ TEST_NET4IN6[2]=10.2.1.254
++ MCAST6=ff02::1
++ PEER_NS=bart
++ PEER_CMD='ip netns exec bart'
++ VRF=lisa
++ VRF_TABLE=1101
++ PBR_TABLE=101
++ nsuccess=0
++ nfail=0
++ getopts :t:pPhv o
++ cleanup
++ ip netns del bart
++ for n in 1 3 5 7
++ ip link del veth1
++ for n in 1 3 5 7
++ ip link del veth3
++ for n in 1 3 5 7
++ ip link del veth5
++ for n in 1 3 5 7
++ ip link del veth7
++ ip link del lisa
++ ip ro flush table 1101
+Error: ipv4: FIB table does not exist.
+Flush terminated
++ ip -6 ro flush table 1101
+Error: ipv6: FIB table does not exist.
+Flush terminated
++ setup
++ echo
+
++ echo '########################################'
+########################################
++ echo 'Configuring interfaces'
+Configuring interfaces
++ set -e
++ ip netns add bart
++ ip -netns bart li set lo up
++ ip li add lisa type vrf table 1101
++ ip li set lisa up
++ ip ro add table 1101 unreachable default metric 8192
++ ip -6 ro add table 1101 unreachable default metric 8192
++ ip li add veth1 type veth peer name veth2
++ ip li add veth3 type veth peer name veth4
++ ip li add veth5 type veth peer name veth6
++ ip li add veth7 type veth peer name veth8
++ for n in 5 7
++ ip li set veth5 vrf lisa
++ for n in 5 7
++ ip li set veth7 vrf lisa
++ for n in 1 3 5 7
++ ip li set veth1 up
++ ip addr add 169.254.1.1/24 dev veth1
++ ip addr add 2001:db8:101::1/64 dev veth1 nodad
++ for n in 1 3 5 7
++ ip li set veth3 up
++ ip addr add 169.254.3.1/24 dev veth3
++ ip addr add 2001:db8:301::1/64 dev veth3 nodad
++ for n in 1 3 5 7
++ ip li set veth5 up
++ ip addr add 169.254.5.1/24 dev veth5
++ ip addr add 2001:db8:501::1/64 dev veth5 nodad
++ for n in 1 3 5 7
++ ip li set veth7 up
++ ip addr add 169.254.7.1/24 dev veth7
++ ip addr add 2001:db8:701::1/64 dev veth7 nodad
++ for n in 2 4 6 8
++ ip li set veth2 netns bart up
++ ip -netns bart addr add 169.254.1.2/24 dev veth2
++ ip -netns bart addr add 2001:db8:101::2/64 dev veth2 nodad
++ for n in 2 4 6 8
++ ip li set veth4 netns bart up
++ ip -netns bart addr add 169.254.3.2/24 dev veth4
++ ip -netns bart addr add 2001:db8:301::2/64 dev veth4 nodad
++ for n in 2 4 6 8
++ ip li set veth6 netns bart up
++ ip -netns bart addr add 169.254.5.2/24 dev veth6
++ ip -netns bart addr add 2001:db8:501::2/64 dev veth6 nodad
++ for n in 2 4 6 8
++ ip li set veth8 netns bart up
++ ip -netns bart addr add 169.254.7.2/24 dev veth8
++ ip -netns bart addr add 2001:db8:701::2/64 dev veth8 nodad
++ ip -6 ro add default via 2001:db8:301::64
++ ip -6 ro add table 1101 default via 2001:db8:701::64
++ set +e
++ run_onlink_tests
++ log_section 'IPv4 onlink'
++ echo
+
++ echo '######################################################################'
+######################################################################
++ echo 'TEST SECTION: IPv4 onlink'
+TEST SECTION: IPv4 onlink
++ echo '######################################################################'
+######################################################################
++ log_subsection 'Valid onlink commands'
++ echo
+
++ echo '#########################################'
+#########################################
++ echo 'TEST SUBSECTION: Valid onlink commands'
+TEST SUBSECTION: Valid onlink commands
++ valid_onlink_ipv4
++ log_subsection 'default VRF - main table'
++ echo
+
++ echo '#########################################'
+#########################################
++ echo 'TEST SUBSECTION: default VRF - main table'
+TEST SUBSECTION: default VRF - main table
++ run_ip 254 169.254.101.1 169.254.1.254 veth1 0 'unicast connected'
++ local table=254
++ local prefix=169.254.101.1
++ local gw=169.254.1.254
++ local dev=veth1
++ local exp_rc=0
++ local 'desc=unicast connected'
++ '[' -n veth1 ']'
++ dev='dev veth1'
++ run_cmd ip ro add table 254 169.254.101.1/32 via 169.254.1.254 'dev veth1' onlink
++ local 'cmd=ip ro add table 254 169.254.101.1/32 via 169.254.1.254 dev veth1 onlink'
++ local out
++ local rc
++ '[' 0 = 1 ']'
+++ eval ip ro add table 254 169.254.101.1/32 via 169.254.1.254 dev veth1 onlink
++ out='+++ ip ro add table 254 169.254.101.1/32 via 169.254.1.254 dev veth1 onlink'
++ rc=0
++ '[' 0 = 1 -a -n '+++ ip ro add table 254 169.254.101.1/32 via 169.254.1.254 dev veth1 onlink' ']'
++ '[' 0 = 1 ']'
++ return 0
++ log_test 0 0 'unicast connected'
++ local rc=0
++ local expected=0
++ local 'msg=unicast connected'
++ '[' 0 -eq 0 ']'
++ nsuccess=1
++ printf '    TEST: %-50s  [ OK ]\n' 'unicast connected'
+    TEST: unicast connected                                   [ OK ]
++ run_ip 254 169.254.101.2 169.254.11.254 veth1 0 'unicast recursive'
++ local table=254
++ local prefix=169.254.101.2
++ local gw=169.254.11.254
++ local dev=veth1
++ local exp_rc=0
++ local 'desc=unicast recursive'
++ '[' -n veth1 ']'
++ dev='dev veth1'
++ run_cmd ip ro add table 254 169.254.101.2/32 via 169.254.11.254 'dev veth1' onlink
++ local 'cmd=ip ro add table 254 169.254.101.2/32 via 169.254.11.254 dev veth1 onlink'
++ local out
++ local rc
++ '[' 0 = 1 ']'
+++ eval ip ro add table 254 169.254.101.2/32 via 169.254.11.254 dev veth1 onlink
++ out='+++ ip ro add table 254 169.254.101.2/32 via 169.254.11.254 dev veth1 onlink'
++ rc=0
++ '[' 0 = 1 -a -n '+++ ip ro add table 254 169.254.101.2/32 via 169.254.11.254 dev veth1 onlink' ']'
++ '[' 0 = 1 ']'
++ return 0
++ log_test 0 0 'unicast recursive'
++ local rc=0
++ local expected=0
++ local 'msg=unicast recursive'
++ '[' 0 -eq 0 ']'
++ nsuccess=2
++ printf '    TEST: %-50s  [ OK ]\n' 'unicast recursive'
+    TEST: unicast recursive                                   [ OK ]
++ log_subsection 'VRF lisa'
++ echo
+
++ echo '#########################################'
+#########################################
++ echo 'TEST SUBSECTION: VRF lisa'
+TEST SUBSECTION: VRF lisa
++ run_ip 1101 169.254.102.1 169.254.5.254 veth5 0 'unicast connected'
++ local table=1101
++ local prefix=169.254.102.1
++ local gw=169.254.5.254
++ local dev=veth5
++ local exp_rc=0
++ local 'desc=unicast connected'
++ '[' -n veth5 ']'
++ dev='dev veth5'
++ run_cmd ip ro add table 1101 169.254.102.1/32 via 169.254.5.254 'dev veth5' onlink
++ local 'cmd=ip ro add table 1101 169.254.102.1/32 via 169.254.5.254 dev veth5 onlink'
++ local out
++ local rc
++ '[' 0 = 1 ']'
+++ eval ip ro add table 1101 169.254.102.1/32 via 169.254.5.254 dev veth5 onlink
++ out='+++ ip ro add table 1101 169.254.102.1/32 via 169.254.5.254 dev veth5 onlink'
++ rc=0
++ '[' 0 = 1 -a -n '+++ ip ro add table 1101 169.254.102.1/32 via 169.254.5.254 dev veth5 onlink' ']'
++ '[' 0 = 1 ']'
++ return 0
++ log_test 0 0 'unicast connected'
++ local rc=0
++ local expected=0
++ local 'msg=unicast connected'
++ '[' 0 -eq 0 ']'
++ nsuccess=3
++ printf '    TEST: %-50s  [ OK ]\n' 'unicast connected'
+    TEST: unicast connected                                   [ OK ]
++ run_ip 1101 169.254.102.2 169.254.12.254 veth5 0 'unicast recursive'
++ local table=1101
++ local prefix=169.254.102.2
++ local gw=169.254.12.254
++ local dev=veth5
++ local exp_rc=0
++ local 'desc=unicast recursive'
++ '[' -n veth5 ']'
++ dev='dev veth5'
++ run_cmd ip ro add table 1101 169.254.102.2/32 via 169.254.12.254 'dev veth5' onlink
++ local 'cmd=ip ro add table 1101 169.254.102.2/32 via 169.254.12.254 dev veth5 onlink'
++ local out
++ local rc
++ '[' 0 = 1 ']'
+++ eval ip ro add table 1101 169.254.102.2/32 via 169.254.12.254 dev veth5 onlink
++ out='+++ ip ro add table 1101 169.254.102.2/32 via 169.254.12.254 dev veth5 onlink'
++ rc=0
++ '[' 0 = 1 -a -n '+++ ip ro add table 1101 169.254.102.2/32 via 169.254.12.254 dev veth5 onlink' ']'
++ '[' 0 = 1 ']'
++ return 0
++ log_test 0 0 'unicast recursive'
++ local rc=0
++ local expected=0
++ local 'msg=unicast recursive'
++ '[' 0 -eq 0 ']'
++ nsuccess=4
++ printf '    TEST: %-50s  [ OK ]\n' 'unicast recursive'
+    TEST: unicast recursive                                   [ OK ]
++ log_subsection 'VRF device, PBR table'
++ echo

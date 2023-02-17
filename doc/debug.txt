@@ -1,0 +1,153 @@
+```
+lang=bash, name=QEMU GDB debug, lines=20
+=========================================================================================================
+                                QEMU Build
+=========================================================================================================
+Here is a summary of making an easy-to-use setup for kernel research and debugging.
+Compile a kernel for GNS Debian VM and attach the gdb session.
+- Save config from GNS host to the build tree
+  scp $GNS_HOST:/boot/config-<version> .
+- Disable optimization for the targeted module:
+     --- a/net/ipv4/Makefile
+  ⋮ 20 │  ccflags-y += -fno-default-inline -fno-inline -fno-inline-small-functions \
+  ⋮ 21 │               -fno-indirect-inlining -fno-inline-functions-called-once
+  ⋮ 22 │  ccflags-y += -O1 -g3 -ggdb3
+- Enable debug config
+  XXX: docs/kernel_debug_conf.txt - example options
+  XXX: docs/debian.conf           - config used for the screen capture
+- Compile debian packages while skipping all the new options with defaults
+  Transfer and install them to test the host
+--------------------------------------------------------------
+  yes 'n' | make oldconfig
+  make -j $(getconf _NPROCESSORS_ONLN) bindeb-pkg LOCALVERSION=-custom
+  scp ../*.deb $GNS_HOST:~/
+  host> dpkg -i *.deb
+--------------------------------------------------------------
+- Specify `-s' as qemu argument for GNS Host and restart
+--------------------------------------------------------------
+  Configure -> Advanced -> Additional settings -> Options
+  -s  Shorthand for -gdb tcp::1234, i.e. open a gdbserver on TCP port 1234.
+  add any other debugging arguments, i.e. `earlyprintk, rw, init=/bin/bash ...`
+
+  NOTE: `nokaslr` may be needed if the debugger stops on the wrong line / doesn't find the src.
+  You can edit /boot/grub/grub.cfg, add arguments to the `linux` menuentry
+--------------------------------------------------------------
+- Start debugger instance, load kernel binary, connect to remote `:1234`, load symbols
+--------------------------------------------------------------
+  function linux_gdb {
+    _root=$HOME/Desktop/linux-next
+    cd $_root && \
+    gdb -ex "add-auto-load-safe-path $_root" \
+        -ex "file $_root/vmlinux"            \
+        -ex "target remote localhost:1234" \
+        -ex "lx-symbols $_root"
+  }
+
+  $ linux_gdb
+  # The GNS console will freeze, waiting for commands from gdb client
+  > b ip_forward
+  > c
+  ....  R1 ping -> C1
+  < gdb triggered
+  > p *skb
+  > p *net
+  > info locals
+  > backtrace full 
+  .... debugging session
+  > delete break
+  > c
+  ....
+  > quit
+  $ _
+--------------------------------------------------------------
+
+NOTE: if you need a minimal setup to inspect some kernel structure on the fly, check this repo:
+https://github.com/cirosantilli/linux-kernel-module-cheat#gdb
+This build lets you disable all optimizations but lacks advanced Linux tools/network infra.
+You can import the generated QEMU into your GNS3 project, which requires manually creating a template with init args.
+```
+-----------
+```
+lang=bash, name=PyTest, lines=20
+=========================================================================================================
+                                PyTest
+=========================================================================================================
+Assuming you want to run the top without running the test suit, run the following:
+-----
+ $ pytest -sv --topology-only ... test_bgp_qppb.py
+ unet> help
+
+ Commands:
+   help                       :: this help
+   sh [hosts] <shell-command> :: execute <shell-command> on <host>
+   term [hosts]               :: open shell terminals for hosts
+   vtysh [hosts]              :: open vtysh terminals for hosts
+   [hosts] <vtysh-command>    :: execute vtysh-command on hosts
+
+ unet> sh r1 ping 10.0.3.1
+ unet> vtysh r1 show runnings
+                ....
+------
+You can use `get_topogen().cli()` to open this CLI from the debugger, check the helpers sections for more.
+
+---------------------------------------------------------------------------------------------------------
+                                   Workflow:
+---------------------------------------------------------------------------------------------------------
+- Enable debug logs in `tests/topotest/pytest.ini` 
+--------------------------------------------------------------
+        addopts = "-sv"
+        verbosity = debug
+        show_router_config = True
+              ...
+        log_level = DEBUG
+        log_cli_level = DEBUG
+              ...
+        # shorten date fmt for visibility
+        log_file_date_format = %H:%M:%S
+        log_cli_date_format =  %H:%M:%S
+--------------------------------------------------------------
+- Setup breakpoint before testing QoS setup, start test
+  [Optionally] setup pysnooper for generation execution log
+  https://github.com/cool-RR/PySnooper - Never use print for debugging again
+  https://github.com/cool-RR/PySnooper/blob/master/ADVANCED_USAGE.md
+--------------------------------------------------------------
+    os.environ['PYTHONBREAKPOINT'] = 'pudb.set_trace'
+    test_qos_setup -> breakpoint()
+    # run all tests
+    sudo -E PYTHON=python3 pytest-3 --pudb test_bgp_qppb.py
+    # run a single test
+    sudo -E PYTHON=python3 pytest-3 --pudb test_bgp_qppb.py -k test_qos_topo
+    -------------------------
+    import pysnooper
+    @pysnooper.snoop('/home/vova/snoop/qppb_qos.log', depth=3, max_variable_length=200)
+    def test_func(...):
+    NOTE: log is always appended to the file, without prior truncating
+    -------------------------
+    NOTE: if a test fails before clearing bpffs ...
+    sudo umount /tmp/topotests/bgp_qppb_vyos_flow.test_bgp_qppb/r*/bpf
+--------------------------------------------------------------
+- Start traffic visualizers (check helpers `bw_monitor`)
+- Verify that traffic pattern matches the expectations
+- Dump topo/local/global/tc/bpf/unet (check helpers)
+--------------------------------------------------------------
+  sudo bpftool prog tracelog
+  > tc_log_stats(r1, "r1-r2-eth0")
+--------------------------------------------------------------
+- Run and visualize some traffic
+--------------------------------------------------------------
+for i in range(1, 5):
+    client = start_client(
+        h1, dst="10.6%d.0.1" % i, port=5200 + i, timeout=10, background=True
+    )
+--------------------------------------------------------------
+- Dump tc/bpf env, check snooper logs for the deep dive
+--------------------------------------------------------------
+  cd $HOME/snoop
+  grep' BW samples'...
+  grep iperf  ...
+  ...
+--------------------------------------------------------------
+TODO:  gdb workflow?
+=========================================================================================================
+```
+-----------

@@ -1,0 +1,555 @@
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> entering PuDB (IO-capturing turned off) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+bpython version 0.23 on top of Python 3.8.10 /usr/bin/python3
+>>> tgen.cli()
+
+--- Micronet CLI Starting ---
+
+
+unet> show run
+------ Host: h1 ------
+18:44:56,650 DEBUG: topolog.h1: LinuxNamespace(h1): cmd_status("['/bin/bash', '-c', 'vtysh -c "show run"']", kwargs: {'encoding': 'utf-8', 'stdoutBuilding configuration...
+
+Current configuration:
+!
+frr version 8.5-dev
+frr defaults traditional
+hostname ZephyrusNG
+no ipv6 forwarding
+hostname h1
+service integrated-vtysh-config
+!
+end
+------- End: h1 ------
+------ Host: h2 ------
+18:44:56,674 DEBUG: topolog.h2: LinuxNamespace(h2): cmd_status("['/bin/bash', '-c', 'vtysh -c "show run"']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+Building configuration...
+
+Current configuration:
+!
+frr version 8.5-dev
+frr defaults traditional
+hostname ZephyrusNG
+no ipv6 forwarding
+hostname h2
+service integrated-vtysh-config
+!
+end
+------- End: h2 ------
+------ Host: r1 ------
+18:44:56,696 DEBUG: topolog.r1: LinuxNamespace(r1): cmd_status("['/bin/bash', '-c', 'vtysh -c "show run"']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+Building configuration...
+
+Current configuration:
+!
+frr version 8.5-dev
+frr defaults traditional
+hostname r1
+log file /tmp/topotests/bgp_qppb_vyos_flow.test_bgp_qppb/debug.log
+log timestamp precision 3
+log commands
+no service integrated-vtysh-config
+!
+debug zebra events
+debug zebra rib
+debug zebra nht
+debug zebra vxlan
+debug bgp neighbor-events
+debug bgp nht
+debug bgp update-groups
+debug bgp updates in
+debug bgp updates out
+debug bgp zebra
+debug bgp vpn leak-from-vrf
+debug bgp vpn leak-to-vrf
+debug bgp graceful-restart
+!
+debug vrf
+!
+debug route-map
+!
+interface lo
+ ip address 1.0.1.17/32
+ ipv6 address 2001:db8:f::1:17/128
+exit
+!
+interface r1-r2-eth0
+ ip address 10.0.0.1/30
+ ipv6 address fd00::1/64
+exit
+!
+router bgp 30
+ bgp log-neighbor-changes
+ no bgp ebgp-requires-policy
+ no bgp network import-check
+ neighbor 10.0.0.2 remote-as 10
+ neighbor 10.0.0.2 timers 3 10
+ neighbor 10.0.0.2 timers connect 5
+ !
+ address-family ipv4 unicast
+  redistribute connected
+  redistribute static
+  table-map QPPB
+ exit-address-family
+exit
+!
+ip prefix-list pf_list_1 seq 69 permit 10.69.0.0/30
+!
+bgp community-list standard comm_list_1 seq 5 permit 60:1
+bgp community-list standard comm_list_2 seq 5 permit 60:2
+bgp community-list standard comm_list_3 seq 5 permit 60:3
+bgp community-list standard comm_list_4 seq 5 permit 60:4
+bgp community-list standard comm_list_5 seq 5 permit 60:5
+bgp community-list standard comm_list_6 seq 5 permit 60:6
+bgp community-list standard comm_list_7 seq 5 permit 60:7
+!
+route-map QPPB permit 10
+ match community comm_list_1
+ set dscp 10
+exit
+!
+route-map QPPB permit 20
+ match community comm_list_2
+ set dscp 20
+exit
+!
+route-map QPPB permit 30
+ match community comm_list_3
+ set dscp 30
+exit
+!
+route-map QPPB permit 40
+ match community comm_list_4
+ set dscp 40
+exit
+!
+route-map QPPB permit 50
+ match community comm_list_5
+ set dscp 50
+exit
+!
+route-map QPPB permit 60
+ match community comm_list_6
+ set dscp 15
+exit
+!
+route-map QPPB permit 70
+ match community comm_list_7
+ set dscp 25
+exit
+!
+route-map QPPB permit 80
+ match ip address prefix-list pf_list_1
+ set dscp 63
+exit
+!
+route-map QPPB permit 90
+exit
+!
+end
+------- End: r1 ------
+------ Host: r2 ------
+18:44:56,731 DEBUG: topolog.r2: LinuxNamespace(r2): cmd_status("['/bin/bash', '-c', 'vtysh -c "show run"']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+Building configuration...
+
+Current configuration:
+!
+frr version 8.5-dev
+frr defaults traditional
+hostname r2
+log file /tmp/topotests/bgp_qppb_vyos_flow.test_bgp_qppb/r2/zebra.log
+log timestamp precision 3
+log commands
+log file /tmp/topotests/bgp_qppb_vyos_flow.test_bgp_qppb/r2/bgpd.log
+log file /tmp/topotests/bgp_qppb_vyos_flow.test_bgp_qppb/r2/staticd.log
+no service integrated-vtysh-config
+!
+interface lo
+ ip address 1.0.2.17/32
+ ipv6 address 2001:db8:f::2:17/128
+exit
+!
+interface r2-r1-eth0
+ ip address 10.0.0.2/30
+ ipv6 address fd00::2/64
+exit
+!
+interface r2-r3-eth1
+ ip address 10.0.0.5/30
+ ipv6 address fd00:0:0:1::1/64
+exit
+!
+router bgp 10
+ bgp log-neighbor-changes
+ no bgp ebgp-requires-policy
+ no bgp network import-check
+ neighbor 10.0.0.1 remote-as 30
+ neighbor 10.0.0.1 timers 3 10
+ neighbor 10.0.0.1 timers connect 5
+ neighbor 10.0.0.6 remote-as 10
+ neighbor 10.0.0.6 timers 3 10
+ neighbor 10.0.0.6 timers connect 5
+ !
+ address-family ipv4 unicast
+  redistribute connected
+  redistribute static
+  neighbor 10.0.0.1 route-map send_community out
+ exit-address-family
+exit
+!
+ip prefix-list pf_list_1 seq 10 permit 10.61.0.1/32
+ip prefix-list pf_list_2 seq 10 permit 10.62.0.1/32
+ip prefix-list pf_list_3 seq 10 permit 10.63.0.1/32
+ip prefix-list pf_list_4 seq 10 permit 10.64.0.1/32
+ip prefix-list pf_list_5 seq 10 permit 10.65.0.1/32
+ip prefix-list pf_list_6 seq 10 permit 10.66.0.1/32
+ip prefix-list pf_list_7 seq 10 permit 10.67.0.1/32
+!
+route-map send_community permit 10
+ match ip address prefix-list pf_list_1
+ set community 60:1 additive
+exit
+!
+route-map send_community permit 20
+ match ip address prefix-list pf_list_2
+ set community 60:2 additive
+exit
+!
+route-map send_community permit 30
+ match ip address prefix-list pf_list_3
+ set community 60:3 additive
+exit
+!
+route-map send_community permit 40
+ match ip address prefix-list pf_list_4
+ set community 60:4 additive
+exit
+!
+route-map send_community permit 50
+ match ip address prefix-list pf_list_5
+ set community 60:5 additive
+exit
+!
+route-map send_community permit 60
+ match ip address prefix-list pf_list_6
+ set community 60:6 additive
+exit
+!
+route-map send_community permit 70
+ match ip address prefix-list pf_list_7
+ set community 60:7 additive
+exit
+!
+route-map send_community permit 80
+exit
+!
+end
+------- End: r2 ------
+------ Host: r3 ------
+18:44:56,764 DEBUG: topolog.r3: LinuxNamespace(r3): cmd_status("['/bin/bash', '-c', 'vtysh -c "show run"']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+Building configuration...
+
+Current configuration:
+!
+frr version 8.5-dev
+frr defaults traditional
+hostname r3
+log file /tmp/topotests/bgp_qppb_vyos_flow.test_bgp_qppb/r3/zebra.log
+log timestamp precision 3
+log commands
+log file /tmp/topotests/bgp_qppb_vyos_flow.test_bgp_qppb/r3/bgpd.log
+log file /tmp/topotests/bgp_qppb_vyos_flow.test_bgp_qppb/r3/staticd.log
+no service integrated-vtysh-config
+!
+interface lo
+ ip address 1.0.3.17/32
+ ipv6 address 2001:db8:f::3:17/128
+exit
+!
+interface r3-r2-eth0
+ ip address 10.0.0.6/30
+ ipv6 address fd00:0:0:1::2/64
+exit
+!
+interface r3-r4-eth1
+ ip address 10.0.0.9/30
+ ipv6 address fd00:0:0:2::1/64
+exit
+!
+router bgp 10
+ bgp log-neighbor-changes
+ no bgp ebgp-requires-policy
+ no bgp network import-check
+ neighbor 10.0.0.5 remote-as 10
+ neighbor 10.0.0.5 timers 3 10
+ neighbor 10.0.0.5 timers connect 5
+ neighbor 10.0.0.10 remote-as 60
+ neighbor 10.0.0.10 timers 3 10
+ neighbor 10.0.0.10 timers connect 5
+ !
+ address-family ipv4 unicast
+  redistribute connected
+  redistribute static
+ exit-address-family
+exit
+!
+end
+------- End: r3 ------
+------ Host: r4 ------
+18:44:56,822 DEBUG: topolog.r4: LinuxNamespace(r4): cmd_status("['/bin/bash', '-c', 'vtysh -c "show run"']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+Building configuration...
+
+Current configuration:
+!
+frr version 8.5-dev
+frr defaults traditional
+hostname r4
+log file /tmp/topotests/bgp_qppb_vyos_flow.test_bgp_qppb/r4/zebra.log
+log timestamp precision 3
+log commands
+log file /tmp/topotests/bgp_qppb_vyos_flow.test_bgp_qppb/r4/bgpd.log
+log file /tmp/topotests/bgp_qppb_vyos_flow.test_bgp_qppb/r4/staticd.log
+no service integrated-vtysh-config
+!
+interface lo
+ ip address 1.0.4.17/32
+ ipv6 address 2001:db8:f::4:17/128
+exit
+!
+interface r4-r3-eth0
+ ip address 10.0.0.10/30
+ ipv6 address fd00:0:0:2::2/64
+exit
+!
+router bgp 60
+ bgp log-neighbor-changes
+ no bgp ebgp-requires-policy
+ no bgp network import-check
+ neighbor 10.0.0.9 remote-as 10
+ neighbor 10.0.0.9 timers 3 10
+ neighbor 10.0.0.9 timers connect 5
+ !
+ address-family ipv4 unicast
+  redistribute connected
+  redistribute static
+ exit-address-family
+exit
+!
+end
+------- End: r4 ------
+
+unet> sh ip a
+------ Host: h1 ------
+18:45:00,806 DEBUG: topolog.h1: LinuxNamespace(h1): cmd_status("['/bin/bash', '-c', 'ip a']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+8: h1-eth0@if9: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 5a:fb:a5:e6:97:fe brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 20.0.0.1/8 scope global h1-eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::58fb:a5ff:fee6:97fe/64 scope link 
+       valid_lft forever preferred_lft forever
+------- End: h1 ------
+------ Host: h2 ------
+18:45:00,820 DEBUG: topolog.h2: LinuxNamespace(h2): cmd_status("['/bin/bash', '-c', 'ip a']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+10: h2-eth0@if11: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether be:74:da:18:35:4c brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 20.0.1.1/8 scope global h2-eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::bc74:daff:fe18:354c/64 scope link 
+       valid_lft forever preferred_lft forever
+------- End: h2 ------
+------ Host: r1 ------
+18:45:00,829 DEBUG: topolog.r1: LinuxNamespace(r1): cmd_status("['/bin/bash', '-c', 'ip a']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet 1.0.1.17/32 brd 1.0.1.17 scope global lo
+       valid_lft forever preferred_lft forever
+    inet6 2001:db8:f::1:17/128 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::200:ff:fe00:0/64 scope link 
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+3: r1-r2-eth0@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc htb state UP group default qlen 1000
+    link/ether 0a:de:10:b0:42:f9 brd ff:ff:ff:ff:ff:ff link-netnsid 1
+    inet 10.0.0.1/30 brd 10.0.0.3 scope global r1-r2-eth0
+       valid_lft forever preferred_lft forever
+    inet6 fd00::1/64 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::8de:10ff:feb0:42f9/64 scope link 
+       valid_lft forever preferred_lft forever
+9: r1-eth0@if8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 xdp/id:535 qdisc noqueue state UP group default qlen 1000
+    link/ether d6:f4:6a:67:9b:62 brd ff:ff:ff:ff:ff:ff link-netnsid 2
+    inet 20.0.0.2/16 scope global r1-eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::d4f4:6aff:fe67:9b62/64 scope link 
+       valid_lft forever preferred_lft forever
+11: r1-eth1@if10: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 06:e7:9c:ab:eb:c9 brd ff:ff:ff:ff:ff:ff link-netnsid 3
+    inet 20.0.1.2/24 scope global r1-eth1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::4e7:9cff:feab:ebc9/64 scope link 
+       valid_lft forever preferred_lft forever
+------- End: r1 ------
+------ Host: r2 ------
+18:45:00,842 DEBUG: topolog.r2: LinuxNamespace(r2): cmd_status("['/bin/bash', '-c', 'ip a']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet 1.0.2.17/32 brd 1.0.2.17 scope global lo
+       valid_lft forever preferred_lft forever
+    inet6 2001:db8:f::2:17/128 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::200:ff:fe00:0/64 scope link 
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: r2-r1-eth0@if3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 82:13:34:90:0e:31 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.0.0.2/30 brd 10.0.0.3 scope global r2-r1-eth0
+       valid_lft forever preferred_lft forever
+    inet6 fd00::2/64 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::8013:34ff:fe90:e31/64 scope link 
+       valid_lft forever preferred_lft forever
+5: r2-r3-eth1@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 9e:c4:3d:b7:88:45 brd ff:ff:ff:ff:ff:ff link-netnsid 2
+    inet 10.0.0.5/30 brd 10.0.0.7 scope global r2-r3-eth1
+       valid_lft forever preferred_lft forever
+    inet6 fd00:0:0:1::1/64 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::9cc4:3dff:feb7:8845/64 scope link 
+       valid_lft forever preferred_lft forever
+------- End: r2 ------
+------ Host: r3 ------
+18:45:00,857 DEBUG: topolog.r3: LinuxNamespace(r3): cmd_status("['/bin/bash', '-c', 'ip a']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet 1.0.3.17/32 brd 1.0.3.17 scope global lo
+       valid_lft forever preferred_lft forever
+    inet6 2001:db8:f::3:17/128 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::200:ff:fe00:0/64 scope link 
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+4: r3-r2-eth0@if5: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 9a:93:0b:ef:23:3b brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.0.0.6/30 brd 10.0.0.7 scope global r3-r2-eth0
+       valid_lft forever preferred_lft forever
+    inet6 fd00:0:0:1::2/64 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::9893:bff:feef:233b/64 scope link 
+       valid_lft forever preferred_lft forever
+7: r3-r4-eth1@if6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether d2:e7:c3:27:61:25 brd ff:ff:ff:ff:ff:ff link-netnsid 2
+    inet 10.0.0.9/30 brd 10.0.0.11 scope global r3-r4-eth1
+       valid_lft forever preferred_lft forever
+    inet6 fd00:0:0:2::1/64 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::d0e7:c3ff:fe27:6125/64 scope link 
+       valid_lft forever preferred_lft forever
+------- End: r3 ------
+------ Host: r4 ------
+18:45:00,869 DEBUG: topolog.r4: LinuxNamespace(r4): cmd_status("['/bin/bash', '-c', 'ip a']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet 1.0.4.17/32 brd 1.0.4.17 scope global lo
+       valid_lft forever preferred_lft forever
+    inet 10.61.0.1/32 scope global lo
+       valid_lft forever preferred_lft forever
+    inet 10.62.0.1/32 scope global lo
+       valid_lft forever preferred_lft forever
+    inet 10.63.0.1/32 scope global lo
+       valid_lft forever preferred_lft forever
+    inet 10.64.0.1/32 scope global lo
+       valid_lft forever preferred_lft forever
+    inet 10.65.0.1/32 scope global lo
+       valid_lft forever preferred_lft forever
+    inet 10.66.0.1/32 scope global lo
+       valid_lft forever preferred_lft forever
+    inet6 2001:db8:f::4:17/128 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::200:ff:fe00:0/64 scope link 
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+6: r4-r3-eth0@if7: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether c6:2e:78:5d:53:8a brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.0.0.10/30 brd 10.0.0.11 scope global r4-r3-eth0
+       valid_lft forever preferred_lft forever
+    inet6 fd00:0:0:2::2/64 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::c42e:78ff:fe5d:538a/64 scope link 
+       valid_lft forever preferred_lft forever
+------- End: r4 ------
+
+unet> sh ip l
+------ Host: h1 ------
+18:45:07,231 DEBUG: topolog.h1: LinuxNamespace(h1): cmd_status("['/bin/bash', '-c', 'ip l']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+8: h1-eth0@if9: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether 5a:fb:a5:e6:97:fe brd ff:ff:ff:ff:ff:ff link-netnsid 0
+------- End: h1 ------
+------ Host: h2 ------
+18:45:07,243 DEBUG: topolog.h2: LinuxNamespace(h2): cmd_status("['/bin/bash', '-c', 'ip l']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+10: h2-eth0@if11: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether be:74:da:18:35:4c brd ff:ff:ff:ff:ff:ff link-netnsid 0
+------- End: h2 ------
+------ Host: r1 ------
+18:45:07,252 DEBUG: topolog.r1: LinuxNamespace(r1): cmd_status("['/bin/bash', '-c', 'ip l']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+3: r1-r2-eth0@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc htb state UP mode DEFAULT group default qlen 1000
+    link/ether 0a:de:10:b0:42:f9 brd ff:ff:ff:ff:ff:ff link-netnsid 1
+9: r1-eth0@if8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 xdp qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether d6:f4:6a:67:9b:62 brd ff:ff:ff:ff:ff:ff link-netnsid 2
+    prog/xdp id 535 tag b99b47009cb7cbfa jited 
+11: r1-eth1@if10: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether 06:e7:9c:ab:eb:c9 brd ff:ff:ff:ff:ff:ff link-netnsid 3
+------- End: r1 ------
+------ Host: r2 ------
+18:45:07,261 DEBUG: topolog.r2: LinuxNamespace(r2): cmd_status("['/bin/bash', '-c', 'ip l']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: r2-r1-eth0@if3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether 82:13:34:90:0e:31 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+5: r2-r3-eth1@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether 9e:c4:3d:b7:88:45 brd ff:ff:ff:ff:ff:ff link-netnsid 2
+------- End: r2 ------
+------ Host: r3 ------
+18:45:07,271 DEBUG: topolog.r3: LinuxNamespace(r3): cmd_status("['/bin/bash', '-c', 'ip l']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+4: r3-r2-eth0@if5: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether 9a:93:0b:ef:23:3b brd ff:ff:ff:ff:ff:ff link-netnsid 0
+7: r3-r4-eth1@if6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether d2:e7:c3:27:61:25 brd ff:ff:ff:ff:ff:ff link-netnsid 2
+------- End: r3 ------
+------ Host: r4 ------
+18:45:07,280 DEBUG: topolog.r4: LinuxNamespace(r4): cmd_status("['/bin/bash', '-c', 'ip l']", kwargs: {'encoding': 'utf-8', 'stdout': -1, 'stderr': -2, 'shell': False, 'stdin': None})
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+6: r4-r3-eth0@if7: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether c6:2e:78:5d:53:8a brd ff:ff:ff:ff:ff:ff link-netnsid 0
+------- End: r4 ------

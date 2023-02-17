@@ -1,0 +1,31 @@
+```
+lang=bash, name=TBD, lines=20
+
+=========================================================================================================
+TBD:
+=========================================================================================================
+- Scalability/Performance testing
+  - NeST framework has initial support for FRR + bandwidth control/testing.
+    Although there is no support for BGP/QPPB/DSCP... so far
+  - LNST may be another good place to start
+- Following features: IP6, L3+ interfaces i.e. bridges/vrfs/tunnels/.../default route marking?
+  From my understanding, the qemu uses xdp-generic mode for interfaces instead of native.
+  We would need to run this on an actual device to see the performance implications from
+  additional fib lookup on xdp side
+  --------
+  Need to consider other available packet redirection strategies if there are any relevant
+  difference / other implications
+  --------
+- Possible Classifier/Marker configuration collisions/overlapping testing
+- integration with other features like `frr-tc` and need in separate cli (?)
+- any other test suits that we can run on top of qppb setup?
+  tools/testing/selftests/drivers/net/mlxsw/qos_*.sh
+
+TODO:
+---------------------------------------------------------------------------------------------------------
+- Implement xdp tools version verification within tests
+- Update docker builds / docs / instructions 
+- iperf visualization?
+- artifacts
+- compile the requirements list
+```

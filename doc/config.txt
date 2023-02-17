@@ -1,0 +1,109 @@
+```
+lang=bash, name=Configuration, lines=20
+=========================================================================================================
+Cisco Summary Steps (QPPBSection.pdf)
+---------------------------------------------------------------------------------------------------------
+    | Mode and Function : Command
+ ## | Global command; creates a route map entry
+ 1. | route-map map-tag [permit | deny] [sequence-number]
+    |
+ ## | Route-map subcommand; used to match IP packets based on parameters matchable with an IP ACL
+ 2. | match ip address {access-list-number | access-list-name} [... access-list-number | ...  access-list-name]
+    |
+ ## | Route-map subcommand; used to mach IP packets based on their length
+ 3. | match length minimum-length maximum-length
+    |
+ ## | Route-map subcommand; sets IP precedence value using the decimal number of name.
+ 4. | set ip precedence <number | name>
+    |
+ ## | Route-map subcommand; sets a group ID in the routing table for classification throughout the network.
+ 5. | set ip qos-group group-id
+    |
+ ## | BGP subcommand; used to modify values related to BGP learned routes, including precedence and QoS group
+ 6. | table-map map-name
+    |
+ ## | Global command; used to create a community list, which matches values in the BGP community string
+ 7. | ip community-list community-list-number {permit | deny} community-number
+    |
+ ## | Global command; used to create an autonomous system (AS) path list, which matches values in the autonomous
+    | system number (ASN) path BGP attribute
+ 8. | ip as-path access-list access-list-number {permit | deny} as-regexp
+    |
+ ## | BGP subcommand; used to make IOS use the AA:NN format for community values, with AA being the ASN,
+    | and NN being a user-defned value
+ 9. | ip bgp-community new-format
+    |
+ ## | Interface subcommand; enables QPPB for packets entering the interface, marking IP precedence
+ 10.| bgp-policy ip-prec-map
+    |
+ ## | Interface subcommand; enables QPPB for packets entering the interface, marking QoS group
+ 11.| bgp-policy ip-qos-map
+
+    Steps | Notes:
+    ------+-------------------------------------------
+      4,5 | `set ip precedence` -> `set dscp`
+          | `set ip qos-group`  -> `xdp_tc_mark`
+        9 |            N/A (?)
+    10,11 | implemented as BPF map, use `bpftool`
+          | map holds values from (4,5)
+
+
+Monitoring QoS Policy Propagation via BGP:
+=========================================================================================================
+To monitor the QoS Policy Propagation via the BGP feature configuration, use the following optional
+commands.
+1. show ip bgp         | Displays entries in the Border Gateway Protocol (BGP) routing table to verify whether
+                       | the correct community is set on the prefixes.
+2. show ip cef network | Displays entries in the forwarding information base (FIB) table based on the
+                       | specified IP address to verify whether Cisco Express Forwarding has the correct
+                       | precedence value for the prefix.
+3. show ip interface   | Displays information about the interface.
+show ip bgp community-list | Displays routes permitted by the BGP community to verify whether correct
+                           | prefixes are selected.
+
+    Steps | Notes:
+    ------+-------------------------------------------
+       3  | Not implemented, use `bpftool` to dump QPPB_MAP instead
+       2  | N/A, there is no CEF on linux, use
+          |    show  bgp ipv4 <nexthop>
+          | CEF alternative is implemented in `xdp_qppb`
+          | there are no specific requirements on how this should be implemented
+          | meaning we can implement a more sophisticated classification flow if needed
+          | Current:
+          |   1. check if qppb enabled on ingress iface
+          |   2. check if a packet should be forwarded - lookup `fib` table
+          |    - skip marking if there is no `fib` entry
+          |   3. lookup `dscp/qos-id` by SRC/DST (qppb mode - BGP_POLICY_SRC/_DST)
+          |   4. modify packet TOS field / extend XDP metadata with `qos-id` tag
+          |    - qos-id will be processed on the `tc` ingress hook
+
+
+=========================================================================================================
+FRR documentation for table-map
+---------------------------------------------------------------------------------------------------------
+.. clicmd:: table-map ROUTE-MAP-NAME
+   clihelp:: "BGP table to RIB route download filter\n"
+   This feature is used to apply a route-map on route updates from BGP to
+   Zebra.  All the applicable match operations are allowed, such as match on
+   prefix, next-hop, communities, etc. Set operations for this attach-point are
+   limited to metric and next-hop only. Any operation of this feature does not
+   affect BGPs internal RIB.
+
+   Supported for ipv4 and ipv6 address families. It works on multi-paths as
+   well, however, metric setting is based on the best-path only.
+
+Minimal match-all QPPB map
+---------------------------------------------------------------------------------------------------------
+   input_dict_1 = {
+       "r2": {
+           "route_maps": {
+               "QPPB": [{
+                       "action": "permit",
+                       "set": { "dscp": "af11", }
+               }]
+           }
+       }
+   }
+=========================================================================================================
+```
+----------------

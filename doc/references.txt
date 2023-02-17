@@ -1,0 +1,153 @@
+```
+lang=bash, name=References, lines=20
+          QPPB examples
+---------------------------------------------------------------------------------------------------------
+https://www.noction.com/blog/qos-policy-propagation-via-bgp-qppb
+https://pierky.wordpress.com/tag/qos/
+https://cisconinja.wordpress.com/2009/01/14/qos-policy-propagation-with-bgp/
+https://community.cisco.com/t5/service-providers-knowledge-base/asr9000-xr-implementing-qos-policy-propagation-for-bgp-qppb/ta-p/3136639
+https://books.google.com.ua/books?id=qq3FAgAAQBAJ&pg=PA278&lpg=PA278&dq=QPPB&ots=mvWNkGAtP2&sig=ACfU3U3lymWe2HvtZVR7pONnOVmXanvdFA&hl=en#v=onepage&q=QPPB&f=false
+http://www.h3c.com/en/Support/Resource_Center/HK/Home/Switches/00-Public/Configure/Configuration_Guide/H3C_S6800[S6860][S6861]_(R27xx)_S6820_CG-6W100/08/201906/1201594_294551_0.htm
+https://www.cisco.com/c/en/us/td/docs/iosxr/cisco8000/qos/75x/b-qos-cg-8k-75x/classify_packets_to_identify_specific_traffic.html#concept_b2j_5xq_2tb
+https://littlewolf.moe/bgp/372/
+https://www.youtube.com/watch?v=t024CqVsu6I
+
+                BGP
+---------------------------------------------------------------------------------------------------------
+https://learningnetwork.cisco.com/s/article/BGP-Zero-to-Hero-Part-1---Establishing-Peering-s
+https://jvns.ca/blog/2021/10/05/tools-to-look-at-bgp-routes/
+
+        Iproute documentation
+---------------------------------------------------------------------------------------------------------
+https://baturin.org/docs/iproute2/#ip-rule-add-tos
+http://www.policyrouting.org/iproute2.doc.html#ss9.5
+https://docs.pyroute2.org/iproute.html#htb
+https://docs.pyroute2.org/netns.html
+https://www.lartc.org/lartc.html
+
+             TC guides
+---------------------------------------------------------------------------------------------------------
+https://www.funtoo.org/Traffic_Control
+https://wiki.archlinux.org/title/advanced_traffic_control
+https://web.archive.org/web/20190216230807/https://wiki.linuxwall.info/doku.php/en:ressources:dossiers:networking:traffic_control
+http://jve.linuxwall.info/ressources/taf/Plug-North-QoS-2011.pdf
+https://openwrt.org/docs/guide-user/network/traffic-shaping/packet.scheduler
+http://linux-ip.net/pages/diagrams.html
+http://linux-ip.net/pages/documents.html
+http://linux-ip.net/gl/tc-filters/tc-filters.html
+QoS in Linux with TC and Filters - TC + TOS examples:
+https://www.linux.com/training-tutorials/qos-linux-tc-and-filters/
+TC bpf direct-action
+https://qmonnet.github.io/whirl-offload/2020/04/11/tc-bpf-direct-action/
+HTB manual - user guide
+http://luxik.cdi.cz/~devik/qos/htb/manual/userg.htm
+https://www.arvanta.net/~mps/linux-tc.html
+
+https://github.com/sonic-net/SONiC/tree/master/doc/qos
+=========================================================================================================
+                BPF
+=========================================================================================================
+Absolute Beginner's Guide to BCC, XDP, and eBPF
+https://gist.github.com/satrobit/17eb0ddd4e122425d96f60f45def9627
+https://docs.cilium.io/en/stable/bpf/
+https://ebpf.io/what-is-ebpf/
+https://github.com/borkmann/bpf-docs
+
+EDB - eBPF debugger (not tried myself, tough)
+https://github.com/dylandreimerink/edb
+
+Bpftool showcase:
+https://qmonnet.github.io/whirl-offload/2021/09/23/bpftool-features-thread/
+
+BCC (BPF Compiler Collection):
+https://github.com/iovisor/bcc/blob/master/docs/reference_guide.md
+https://github.com/iovisor/bcc/blob/master/docs/tutorial_bcc_python_developer.md
+
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/bpf/bpf_devel_QA.rst
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/bpf/bpf_design_QA.rst
+
+https://github.com/leandromoreira/linux-network-performance-parameters
+https://github.com/zoidbergwill/awesome-ebpf
+
+                 XDP
+---------------------------------------------------------------------------------------------------------
+https://www.iovisor.org/technology/xdp
+https://github.com/dsahern/bpf-progs/blob/master/docs/netdev-0x14-XDP-and-the-cloud.pdf
+
+XDP test suite for Linux kernel.pdf
+https://github.com/0voice/linux_kernel_wiki/blob/main/%E8%AE%BA%E6%96%87/%E3%80%8AXDP%20test%20suite%20for%20Linux%20kernel%E3%80%8B.pdf
+
+                Kernel
+---------------------------------------------------------------------------------------------------------
+https://blog.packagecloud.io/monitoring-tuning-linux-networking-stack-sending-data/
+https://blog.packagecloud.io/illustrated-guide-monitoring-tuning-linux-networking-stack-receiving-data/
+https://blog.packagecloud.io/monitoring-tuning-linux-networking-stack-receiving-data/
+
+Namespaces:
+https://man7.org/linux/man-pages/man7/namespaces.7.html
+https://man7.org/linux/man-pages/man7/mount_namespaces.7.html
+https://man7.org/linux/man-pages/man1/nsenter.1.html
+https://man7.org/linux/man-pages/man1/unshare.1.html
+
+        Tracing/Debugging/Visualizing
+---------------------------------------------------------------------------------------------------------
+https://wiki.python.org/moin/PythonDebuggingTools
+https://github.com/cool-RR/PySnooper
+https://stackoverflow.com/questions/25308847/attaching-a-process-with-pdb
+
+https://github.com/goldshtn/linux-tracing-workshop
+https://github.com/vinta/awesome-python
+https://github.com/Textualize/rich
+https://project-awesome.org/#networking
+https://realpython.com/python-debugging-pdb/
+
+                FRR
+=========================================================================================================
+https://docs.frrouting.org/projects/dev-guide/en/latest/topotests-jsontopo.html
+https://docs.frrouting.org/projects/dev-guide/en/latest/topotests.html
+
+TC implementation in FRR:
+https://sigeryang.net/gsoc2022-frr/
+https://github.com/FRRouting/frr/pull/11908
+
+=========================================================================================================
+               DSCP
+=========================================================================================================
+https://www.bytesolutions.com/dscp-tos-cos-presidence-conversion-chart/
+https://www.tucny.com/Home/dscp-tos
+https://www.ccexpert.us/root-bridge/layer-3-qos-classification-with-dscp.html
+https://www.ccexpert.us/routing-switching/dscp-settings-and-terminology.html
+https://www.ccexpert.us/ccda/tos.html
+https://linuxreviews.org/Type_of_Service_(ToS)_and_DSCP_Values
+
+Note 802.11 (wifi) uses different TOS/DSCP mappings/names
+https://github.com/vanhoefm/krackattacks-scripts/blob/research/tests/remote/rutils.py#L303
+http://wifi-insider.com/wlan/wmm.htm
+
+SO_PRIORITY and IP_TOS:
+https://stackoverflow.com/questions/48095837/setting-dscp-value-to-socket-using-setsockopt
+https://stackoverflow.com/questions/37998404/what-is-the-effect-of-setting-a-linux-socket-high-priority
+https://gist.github.com/wenjianhn/0f7a9a1e36018a42515c
+https://manpages.ubuntu.com/manpages/focal/en/man8/tc-skbprio.8.html
+https://www.mediaonfire.com/blog/2013_11_01_dscp_tagging_with_iptables.html
+man skbprio
+man tc-prio
+
+Dsmark - queueing discipline, DSCP marker/remarker:
+https://tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.adv-qdisc.dsmark.html
+https://www.lartc.org/lartc.html#LARTC.ADV-QDISC.DSMARK
+http://softwareopal.com/qos/default.php?p=ds-29
+
+=========================================================================================================
+```
+----------
+```
+lang=bash, name=Dependencies, lines=5
+references.txt
+=========================================================================================================
+Dependencies:
+---------------------------------------------------------------------------------------------------------
+XXX: bcc(last), pyroute2,  libbpf
+XXX: run tests on docker and check what is missing
+```
+----------

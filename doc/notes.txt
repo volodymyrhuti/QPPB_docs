@@ -1,0 +1,84 @@
+```
+lang=bash, name=Notes, lines=20
+=========================================================================================================
+NOTES:
+---------------------------------------------------------------------------------------------------------
+1. Working with XDP - bpftool vs BCC
+   # Absolute Beginner's Guide to BCC, XDP, and eBPF
+   # https://gist.github.com/satrobit/17eb0ddd4e122425d96f60f45def9627
+   The main admin's means of interacting with BPF/XDP objects is the `bpftool` utility.
+   # You can find a link with the full overview in the reference section.
+
+   BCC is a toolkit for creating efficient kernel tracing and manipulation programs
+   and includes several useful tools and examples. It makes use of extended BPF (Berkeley Packet Filters),
+   formally known as eBPF, a new feature that was first added to Linux 3.15.
+   Much of what BCC uses requires Linux 4.1 and above.
+
+2. XDP loader
+   XXX: a bunch of tools supports compiling/loading XDP, but they differ in BPF syntax, etc...
+        Currently, not sure if there is a need for a separate loader against the BCC
+
+3. XDP debugging
+   The program keeps track of processed packets and stores this to `/sys/fs/bpf/<iface>/xpd_stats_map`
+   This functionality was preserved from the `libbpf` tutorial and required the `xdp_stats` tool for reading.
+   TODO: needs rewriting to python, it shouldn't be complex...
+
+4. XDP mappings are separate objects that do not depend on FRR.
+   If FRR crashes - the mappings may stay intact and keep forwarding the traffic.
+   Users may have multiple maps used under different conditions/requirements and update the FRR handler
+   without the controll plane noticing the modification.
+
+5. Performance/Scale/Bandwidth  testing:
+---------------------------------------------------------------------------------------------------------
+NOTE: QoS testing is outside of the scope of FRR. Therefore I have implemented only a basic example.
+Testing this feature would require a robust framework to generate flows and measure the quality/stability.
+I prefer extending one of the following projects for this purpose if the feature gets enough interest.
+
+Other related projects may be integrated with QPPB for a more robust QoS system
+https://github.com/cryzed/TrafficToll
+https://github.com/LibreQoE/LibreQoS (thx to v.gletenko for refence)
+
+NeST: Network Stack Tester
+NeST is a python3 package aiding researchers and beginners alike in emulating real-world networks.
+https://nest.nitk.ac.in/#/
+https://gitlab.com/nitk-nest/nest
+https://gitlab.com/nitk-nest/nest/-/blob/master/nest/experiment/run_exp.py
+
+LNST: Linux Network Stack Test 
+Linux Network Stack Test is a tool that supports the development and execution of automated and portable network tests.
+https://github.com/LNST-project/lnst
+https://github.com/LNST-project/lnst/wiki/Iperf
+https://github.com/LNST-project/lnst/blob/master/lnst/Tests/Iperf.py
+
+FRR test library was initially built on top of `mininet`, but was later replaced with `micronet`
+https://github.com/mininet/mininet (The best way to emulate almost any network on your laptop!)
+https://github.com/cnp3/ipmininet  # Mininet extension to make experimenting with IP networks easy
+https://github.com/cnp3/ipmininet/blob/72cefde536ca02c650875d4b14d93899824af668/ipmininet/tests/test_tc.py#L47
+
+ipmininet/examples/tc_advanced_network.py
+ipmininet/examples/tc_network.py
+ipmininet/tests/test_tc.py
+
+XXX (relevant for later??): Iperf at 40Gbps and above 
+https://fasterdata.es.net/performance-testing/network-troubleshooting-tools/iperf/multi-stream-iperf3/
+```
+---------
+```
+lang=bash, name=Limitations, lines=20
+=========================================================================================================
+LIMITATIONS
+---------------------------------------------------------------------------------------------------------
+1. BPF should be initialized before starting the `bgpd`. The logic is following
+   - BPF will create the mapping objects on initialization/loading/compilation
+   - FRR triggers the plugin init hook, which is gonna look for mapping files
+     # at this point, FRR has not yet changed the user, so we are `root.`
+     - files not available, the QPPB doesn't work, traffic flow is not affected
+     - files are available, the dscp tag get's associated with a prefix by your route-map
+     # FRR drops root perms. It will be unable to open `/sys/fs/bpf/...` from this point on ...
+     # A `on/off` CLI  requires calling `setuid(0)` to reload the BPF pin.
+
+2. You can set up multiple bpf routers for Topotest, but it was not tested.
+   XXX: Host tools may have problems to interacting with separate bpf instances
+=========================================================================================================
+```
+----------

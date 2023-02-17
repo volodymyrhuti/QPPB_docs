@@ -1,0 +1,5 @@
+linux/*   | Christian Benvenuti [Understanding Linux Network Internals]
+          | Rami Rosen [Linux Kernel Networking]
+xdp_*.png | David Ahern  [Leveraging Kernel Tables with XDP]
+https://pierky.wordpress.com/tag/qos/ - qppb3.webp (full setup available in blog)
+https://slideplayer.com/slide/16587554/ - XDP_overview_2.png

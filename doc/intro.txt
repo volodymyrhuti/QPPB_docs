@@ -1,0 +1,96 @@
+```
+lang=bash, name=Intro, lines=20
+=========================================================================================================
+The QoS Policy Propagation via BGP feature allows you to classify packets by IP precedence based on the
+Border Gateway Protocol (BGP) community lists, BGP autonomous system paths, access lists, thus helping to
+classify based on destination instead of source address.
+
+After packets have been classified, you can use other quality of service (QoS) features such as committed
+access rate (CAR) and Weighted Random Early Detection (WRED) to specify and enforce policies to fit your
+business model.
+
+---------------------------------------------------------------------------------------------------------
+On a large and complex network, a large number of MF (Multi-Field) classification operations are required,
+and routes cannot be classified based on the community attribute, ACL, IP prefix, or AS_Path.
+When a network topology keeps changing, configuring or changing routing policies is difficult or even
+impossible to implement. Therefore, the QPPB is introduced to reduce configuration workload by configuring
+or changing routing policies only on a BGP route sender.
+
+QPPB is implemented as follows:
+- Before sending BGP routes, a route sender sets a specific attribute, such as the AS_Path,
+  community attribute, or extended community attribute, for BGP routes.
+  These attributes are used to identify BGP routes.  
+- After receiving the BGP routes, a route receiver performs the following operations:
+  1. Maps each received BGP route to a QoS local ID, an IP preference and traffic behavior
+     based on the AS_Path, community attribute, or extended community attribute.
+  2. Performs different traffic behaviors for packets transmitted along the routes according
+     to their mapped QoS local IDs, IP preference and traffic behavior.
+     A route receiver can define traffic behaviors for the packets transmitted along the
+     routes based on the following attributes:
+     – ACL
+     – AS-Path list
+     – Community attribute list
+     – Route cost
+     – IP prefix list
+     - etc ...
+3. Creates a QPPB local policy and define the mappings between BGP routes and QoS policies in it.
+4. Apply the QPPB local policy to all packets that meet the matching rules on interfaces.
+
+---------------------------------------------------------------------------------------------------------
+
+Cisco has worked hard over the years to streamline the process of table lookup in the routing table, to
+reduce per-packet processing for the forwarding process, QPPB can use this same efficient table-lookup
+process to reduce classification and marking overhead.
+
+CEF optimizes forwarding by creating a new table that includes entries for the routes in the routing
+table. This table is called the Forwarding Information Base (FIB). The FIB optimizes the process of
+locating a route by performing a table lookup in the FIB rather than the less- efficient table lookup
+of the routing table. In other words, CEF switching crunches the routing table into the FIB, and then
+uses the FIB to make the forwarding decisions. (This in itself is somewhat of an oversimplification
+of CEF; for more detail, refer to Vijay Bollapragada’s Inside Cisco IOS Software Architecture [Cisco Press, 2000].)
+
+CEF optimizes the creation of new data-link headers by creating a table that contains the new data-
+link header associated with each next-hop IP address in the FIB. By doing so, when FIB table lookup
+is complete, the header can be added to the packet with little processing.
+When QPPB marks a route, it actually marks either or both of the two fields inside each entry in the
+FIB. The FIB contains IP precedence and QoS group fields in order to support QPPB. Therefore,
+when CEF crunches the routing table to create FIB entries, when QPPB is configured, the
+appropriate FIB precedence and QoS group fields are set.
+
+```
+----------
+```
+lang=bash, name=Common Terms, lines=20
+=========================================================================================================
+Common Terms
+=========================================================================================================
+What are CoS, COS, ToS, Diffserv, DSCP, DS? (brief explanation, one sentence per acronym will be enough)
+
+CoS - Is a 3-bit field that operates only on VLAN tagged Ethernet at the data link layer (layer 2).
+The field specifies a priority value, that can be used by quality of service (QoS) disciplines to
+differentiate and shape/police network traffic.
+
+COS - Related to legacy telephone systems, COS can define permissions for voice traffic.
+
+ToS - Second byte of the IPv4 header. Also referred to as the differentiated services field (DS field)
+which consists of a 6-bit Differentiated Services Code Point (DSCP) field and a 2-bit
+Explicit Congestion Notification (ECN) field.
+
+Diffserv - Operates at the IP network layer (layer 3), is a new model for quality of service control.
+Packets are individually classified and marked; policy decisions are made independently by each node in a path.
+(see IntServ - Integrated Services)
+
+DSCP - The first six bits of the IP TOS are evaluated to provide more granular classification;
+backward-compatible with IP Precedence
+
+DS - The DiffServ architecture defines the DiffServ (DS) field, which supersedes the ToS field in IPv4
+to make per-hop behavior (PHB) decisions about packet classification and traffic conditioning functions,
+such as metering, marking, shaping, and policing.
+---------------------------------------------------------------------------------------------------------
+Taken from:  https://github.com/temach/reports/blob/master/AN-Lab-1-qos.md \
+             #f-what-are-cos-cos-tos-diffserv-dscp-ds-brief-explanation-one-sentence-per-acronym-will-be-enough
+As well, good starter guide: https://hackmd.io/@tematibr/BJF7E-n4H
+For more guides, check references / attached docs.
+=========================================================================================================
+```
+----------

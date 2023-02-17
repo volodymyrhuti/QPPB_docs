@@ -1,0 +1,121 @@
+```
+lang=bash, name=Herlpers, lines=20
+=========================================================================================================
+The testing framework is built on top of Linux namespaces (not a vm like qemu).
+These are instantiated with `unshare cat` and are `anonymous,` not listed in `ip netns`
+You can list them by `pgrep cat` and interact using `mnexec/nsenter` tools
+You can find example cmds in the test logs, i.e:
+/tmp/topotests/*/exec.log: # DEBUG: topolog: CMD to enter r3: sudo nsenter -a -t 713161
+---------------------------------------------------------------------------------------------------------
+    # dump vtysh per netns
+    function dump_nms {
+    for _pid in $(pgrep cat); do
+        echo -en "\n\n\n\n===========================\n"
+        echo "Namespace: $_pid"
+        sudo mnexec -a $1 vtysh -c 'show run'
+        # sudo mnexec -a $_pid bash
+    done
+    }
+
+    # start `unet` cli from debugger
+    tgen.cli()
+    # run from debugger to start binary is separate window
+    tgen.net.hosts['r3'].run_in_window('bash')
+    tgen.net.hosts['r3'].run_in_window('wireshark')
+
+    -------------------------------------------
+    # run command in router ns
+    function rns {
+        local host=$1; shift
+        pushd /tmp/topotests/bgp_qppb_vyos_flow.test_bgp_qppb
+        sudo mnexec -a $(cat $host.pid) $@
+        popd
+    }
+
+    function bw_monitor {
+      set -x
+      CMDS=(
+        "export LANG=C; rns r2 iftop -P -B -F 10.0.0.0/8 -m100M"
+        "rns r2 nethogs -d 0.1"
+        "rns r2 pktstat -B -T -t -w 0.25"
+        # "rns r2 bandwhich -n -c"
+      )
+      _size=$(( ${#CMDS[@]} - 1 ))
+      _ses="demo"
+
+      tmux kill-session -t $_ses
+      tmux new-session -d -s $_ses
+      echo Size: ${#CMDS[@]}
+      # read q
+      for i in $( seq 1 $_size ); do
+        tmux split-window -v -t $_ses:1.$i
+      done
+      for i in $( seq 0 $_size ); do
+        tmux send-keys -t $_ses:1.$((i+1)) \
+          "${CMDS[$i]}" Enter "$pass" Enter
+      done
+      tmux attach-session -t $_ses
+    }
+
+
+        # Working with namespaces
+    -------------------------------------------
+    from pyroute2 import IPRoute, NetNS, IPDB, NSPopen, setns
+    from pprint import pp;
+    # Prefferably, use rich for improved performance/colors
+    # from rich import print as pp;
+
+    local_ns=NetNS('/proc/1/ns/net')
+    r1_ns_path="/proc/{}/ns/net".format(r1.net.pid)
+    r1_ns=NetNS("/proc/{}/ns/net".format(r1.net.pid))
+
+    pp(locals()); #pp(globals()); pp(topo)
+    # dumps netns environemnts (routes/interfaces/rules/...)
+    pp([x for x in r1_ns.dump()])
+    pp(r1_ns.get_default_routes())
+    pp(vars(r1_ns))
+    pp(dir(r1_ns))
+    # setns(r1_ns)
+    -------------------------------------------
+    # dump bpf log buffer (/sys/kernel/debug/tracing/trace_pipe)
+    r1.bpf.trace_print()
+    # bpf_print_trace(tgen.gears['r1'].bpf)
+    # use methods from test/library, i.e. dump tc stats
+    tc_log_stats(r1, iface)
+
+
+          Network monitoring tools:
+    ------------------------------------------------
+            Monitoring / Stats
+         --------------------------
+     iftop, bmon, bwmon-ng, speedometer, pktstat, ifstat, netstat
+     tcpdump, wireshark, termshark, tshark, scapy, ngrep
+     ethtool, tcptrack, vnstat, ss, lsof
+         --------------------------
+            Traffic Generating
+         --------------------------
+     iperf, netperf, socat, nc, ping, nload, iptraf-ng, netsniff-ng
+         --------------------------
+    nethogs -d 0.1
+    bandwhich -n
+    pktstat  -B -T -t -w 0.25
+       -B | display in Bps
+       -T | show totals
+       -t | `Top` mode
+       -w | time between window updates
+    iftop -P -B -F 10.0.0.0/8 -m100M
+          | export LANG=C for tmux
+       -P | show ports
+       -B | display bandwidth in bytes
+       -F | ipv4 network
+
+    For more tools check:
+    https://github.com/raboof/nethogs#links
+    http://netsniff-ng.org/
+    ------------------------------------------------
+
+#NOTE: if test fails prior to clearing bpffs ...
+sudo umount /tmp/topotests/bgp_qppb_vyos_flow.test_bgp_qppb/r*/bpf
+---------------------------------------------------------------------------------------------------------
+```
+----------------

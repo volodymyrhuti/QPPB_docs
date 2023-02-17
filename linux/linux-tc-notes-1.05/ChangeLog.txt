@@ -1,0 +1,23 @@
+linux-tc-notes-1.05 Sun,  3 Sep 2017 20:20:25 +1000
+  * Bug: Ahhggg!  Confused bits and bytes.  Thanks to:
+         https://forum.pfsense.org/index.php?PHPSESSID=qq4fp5sbd03mvvgct80f7nvag4&topic=89367.msg669349#msg669349
+	 for pointing it out.
+
+linux-tc-notes-1.04 Thu,  9 Apr 2015 10:47:21 +1000
+  * Bug: Cleanups for grammar and clarity in sch_hfsc.txt.
+         Thanks to Sebastian Kemper <sebastian_ml@gmx.net> for
+	 the patch.
+
+linux-tc-notes-1.03 Fri,  6 Feb 2015 11:30:15 +1000
+  * New: Enhance readability for sch_hfsc.txt.
+  * New: Update Makefile.release.
+  * New: Add files to Debian doc-base.
+
+linux-tc-notes-1.02 Fri,  6 Jun 2014 03:13:14 +1000
+  * New: Update Makefile.release
+
+linux-tc-notes-1.01 Thu,  5 Jun 2014 21:00:59 +1000
+  * Bug: Fix grammar in sch_hfsc.txt.
+
+linux-tc-notes-1.0 Thu,  5 Jun 2014 06:54:06 +1000
+  * New: Epoch.

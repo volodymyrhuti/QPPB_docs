@@ -1,0 +1,2023 @@
+Help on module pyroute2.netlink.rtnl.tcmsg.sched_htb in pyroute2.netlink.rtnl.tcmsg:
+
+NAME
+    pyroute2.netlink.rtnl.tcmsg.sched_htb
+
+DESCRIPTION
+    htb
+    +++
+    
+    TODO: list parameters
+    
+    An example with htb qdisc, lets assume eth0 == 2::
+    
+        #          u32 -->    +--> htb 1:10 --> sfq 10:0
+        #          |          |
+        #          |          |
+        # eth0 -- htb 1:0 -- htb 1:1
+        #          |          |
+        #          |          |
+        #          u32 -->    +--> htb 1:20 --> sfq 20:0
+    
+        eth0 = 2
+        # add root queue 1:0
+        ip.tc("add", "htb", eth0, 0x10000, default=0x200000)
+    
+        # root class 1:1
+        ip.tc("add-class", "htb", eth0, 0x10001,
+              parent=0x10000,
+              rate="256kbit",
+              burst=1024 * 6)
+    
+        # two branches: 1:10 and 1:20
+        ip.tc("add-class", "htb", eth0, 0x10010,
+              parent=0x10001,
+              rate="192kbit",
+              burst=1024 * 6,
+              prio=1)
+        ip.tc("add-class", "htb", eht0, 0x10020,
+              parent=0x10001,
+              rate="128kbit",
+              burst=1024 * 6,
+              prio=2)
+    
+        # two leaves: 10:0 and 20:0
+        ip.tc("add", "sfq", eth0, 0x100000,
+              parent=0x10010,
+              perturb=10)
+        ip.tc("add", "sfq", eth0, 0x200000,
+              parent=0x10020,
+              perturb=10)
+    
+        # two filters: one to load packets into 1:10 and the
+        # second to 1:20
+        ip.tc("add-filter", "u32", eth0,
+              parent=0x10000,
+              prio=10,
+              protocol=socket.AF_INET,
+              target=0x10010,
+              keys=["0x0006/0x00ff+8", "0x0000/0xffc0+2"])
+        ip.tc("add-filter", "u32", eth0,
+              parent=0x10000,
+              prio=10,
+              protocol=socket.AF_INET,
+              target=0x10020,
+              keys=["0x5/0xf+0", "0x10/0xff+33"])
+
+CLASSES
+    pyroute2.netlink.nla(pyroute2.netlink.nla_base, pyroute2.netlink.nlmsg_atoms)
+        stats
+    pyroute2.netlink.rtnl.tcmsg.common.nla_plus_rtab(pyroute2.netlink.nla)
+        options
+    pyroute2.netlink.rtnl.tcmsg.common.stats2(pyroute2.netlink.nla)
+        class_stats2
+        qdisc_stats2
+    
+    class class_stats2(pyroute2.netlink.rtnl.tcmsg.common.stats2)
+     |  class_stats2(data=None, offset=0, length=None, parent=None, init=None)
+     |  
+     |  Main NLA class
+     |  
+     |  Method resolution order:
+     |      class_stats2
+     |      pyroute2.netlink.rtnl.tcmsg.common.stats2
+     |      pyroute2.netlink.nla
+     |      pyroute2.netlink.nla_base
+     |      pyroute2.netlink.nla_header
+     |      pyroute2.netlink.nlmsg_base
+     |      builtins.dict
+     |      pyroute2.netlink.nlmsg_encoder_generic
+     |      pyroute2.netlink.nlmsg_decoder_generic
+     |      pyroute2.netlink.nlmsg_atoms
+     |      builtins.object
+     |  
+     |  Data and other attributes defined here:
+     |  
+     |  stats_app = <class 'pyroute2.netlink.rtnl.tcmsg.sched_htb.class_stats2...
+     |      Main NLA class
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.rtnl.tcmsg.common.stats2:
+     |  
+     |  basic = <class 'pyroute2.netlink.rtnl.tcmsg.common.stats2.basic'>
+     |      Main NLA class
+     |  
+     |  nla_map = (('TCA_STATS_UNSPEC', 'none'), ('TCA_STATS_BASIC', 'basic'),...
+     |  
+     |  queue = <class 'pyroute2.netlink.rtnl.tcmsg.common.stats2.queue'>
+     |      Main NLA class
+     |  
+     |  rate_est = <class 'pyroute2.netlink.rtnl.tcmsg.common.stats2.rate_est'...
+     |      Main NLA class
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nla:
+     |  
+     |  decode(self)
+     |      Decode the message. The message should have the `buf`
+     |      attribute initialized. e.g.::
+     |      
+     |          data = sock.recv(16384)
+     |          msg = ifinfmsg(data)
+     |      
+     |      If you want to customize the decoding process, override
+     |      the method, but don't forget to call parent's `decode()`::
+     |      
+     |          class CustomMessage(nlmsg):
+     |      
+     |              def decode(self):
+     |                  nlmsg.decode(self)
+     |                  ...  # do some custom data tuning
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from pyroute2.netlink.nla_base:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nla_base:
+     |  
+     |  zstring = 0
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nla_header:
+     |  
+     |  header = (('length', 'H'), ('type', 'H'))
+     |  
+     |  is_nla = True
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  __and__(self, rvalue)
+     |      Conjunction operation.
+     |  
+     |  __eq__(self, rvalue)
+     |      Having nla, we are able to use it in operations like::
+     |      
+     |          if nla == 'some value':
+     |              ...
+     |  
+     |  __getitem__(self, key)
+     |      x.__getitem__(y) <==> x[y]
+     |  
+     |  __init__(self, data=None, offset=0, length=None, parent=None, init=None)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  __ne__(self, rvalue)
+     |      Return self!=value.
+     |  
+     |  __reduce__(self)
+     |      Helper for pickle.
+     |  
+     |  __setstate__(self, state)
+     |  
+     |  __sub__(self, rvalue)
+     |      Subjunction operation.
+     |  
+     |  compile_nla(self)
+     |  
+     |  copy(self)
+     |      Return a decoded copy of the netlink message. Works
+     |      correctly only if the message was encoded, or is
+     |      received from the socket.
+     |  
+     |  decode_nlas(self, offset)
+     |      Decode the NLA chain. Should not be called manually, since
+     |      it is called from `decode()` routine.
+     |  
+     |  dump(self)
+     |      Dump packet as a dict
+     |  
+     |  encode(self)
+     |      Encode the message into the binary buffer::
+     |      
+     |          msg.encode()
+     |          sock.send(msg.data)
+     |      
+     |      If you want to customize the encoding process, override
+     |      the method::
+     |      
+     |          class CustomMessage(nlmsg):
+     |      
+     |              def encode(self):
+     |                  ...  # do some custom data tuning
+     |                  nlmsg.encode(self)
+     |  
+     |  encode_nlas(self, offset)
+     |      Encode the NLA chain. Should not be called manually, since
+     |      it is called from `encode()` routine.
+     |  
+     |  get(self, key, default=None)
+     |      Universal get() for a netlink message.
+     |  
+     |  get_attr(self, attr, default=None)
+     |      Return the first NLA with that name or None
+     |  
+     |  get_attrs(self, attr)
+     |      Return attrs by name or an empty list
+     |  
+     |  get_encoded(self, attr, default=None)
+     |      Return the first encoded NLA by name
+     |  
+     |  get_nested(self, *keys)
+     |      Return nested NLA or None
+     |  
+     |  getvalue(self)
+     |      Atomic NLAs return their value in the 'value' field,
+     |      not as a dictionary. Complex NLAs return whole dictionary.
+     |  
+     |  load(self, dump)
+     |      Load packet from a dict::
+     |      
+     |          ipr = IPRoute()
+     |          lo = ipr.link('dump', ifname='lo')[0]
+     |          msg_type, msg_value = type(lo), lo.dump()
+     |          ...
+     |          lo = msg_type()
+     |          lo.load(msg_value)
+     |      
+     |      The same methods -- `dump()`/`load()` -- implement the
+     |      pickling protocol for the nlmsg class, see `__reduce__()`
+     |      and `__setstate__()`.
+     |  
+     |  msg_align(self, length)
+     |  
+     |  nla(self, attr=None, default=<class 'pyroute2.netlink.NotInitialized'>)
+     |  
+     |  register_clean_cb(self, cb)
+     |  
+     |  reset(self, buf=None)
+     |  
+     |  setvalue(self, value)
+     |  
+     |  strip(self, attrs)
+     |      Remove an NLA from the attrs chain. The `attrs`
+     |      parameter can be either string, or iterable. In
+     |      the latter case, will be stripped NLAs, specified
+     |      in the provided list.
+     |  
+     |  unregister_clean_cb(self)
+     |  
+     |  valid_nla(self, nla)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Class methods inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  get_size() from builtins.type
+     |  
+     |  name2nla(name) from builtins.type
+     |      Convert human-friendly name into NLA name
+     |      
+     |      Example: address -> IFLA_ADDRESS
+     |      
+     |      Requires self.prefix to be set
+     |  
+     |  nla2name(name) from builtins.type
+     |      Convert NLA name into human-friendly name
+     |      
+     |      Example: IFLA_ADDRESS -> address
+     |      
+     |      Requires self.prefix to be set
+     |  
+     |  sql_schema() from builtins.type
+     |  
+     |  ----------------------------------------------------------------------
+     |  Readonly properties inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  buf
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  chain
+     |  
+     |  data
+     |  
+     |  decoded
+     |  
+     |  length
+     |  
+     |  offset
+     |  
+     |  parent
+     |  
+     |  value
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  __hash__ = None
+     |  
+     |  align = 4
+     |  
+     |  cell_header = None
+     |  
+     |  fields = ()
+     |  
+     |  header_type = None
+     |  
+     |  nla_flags = 0
+     |  
+     |  own_parent = False
+     |  
+     |  pack = None
+     |  
+     |  prefix = None
+     |  
+     |  sql_constraints = {}
+     |  
+     |  sql_extend = ()
+     |  
+     |  sql_extra_fields = ()
+     |  
+     |  value_map = {}
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from builtins.dict:
+     |  
+     |  __contains__(self, key, /)
+     |      True if the dictionary has the specified key, else False.
+     |  
+     |  __delitem__(self, key, /)
+     |      Delete self[key].
+     |  
+     |  __ge__(self, value, /)
+     |      Return self>=value.
+     |  
+     |  __getattribute__(self, name, /)
+     |      Return getattr(self, name).
+     |  
+     |  __gt__(self, value, /)
+     |      Return self>value.
+     |  
+     |  __iter__(self, /)
+     |      Implement iter(self).
+     |  
+     |  __le__(self, value, /)
+     |      Return self<=value.
+     |  
+     |  __len__(self, /)
+     |      Return len(self).
+     |  
+     |  __lt__(self, value, /)
+     |      Return self<value.
+     |  
+     |  __repr__(self, /)
+     |      Return repr(self).
+     |  
+     |  __reversed__(self, /)
+     |      Return a reverse iterator over the dict keys.
+     |  
+     |  __setitem__(self, key, value, /)
+     |      Set self[key] to value.
+     |  
+     |  __sizeof__(...)
+     |      D.__sizeof__() -> size of D in memory, in bytes
+     |  
+     |  clear(...)
+     |      D.clear() -> None.  Remove all items from D.
+     |  
+     |  items(...)
+     |      D.items() -> a set-like object providing a view on D's items
+     |  
+     |  keys(...)
+     |      D.keys() -> a set-like object providing a view on D's keys
+     |  
+     |  pop(...)
+     |      D.pop(k[,d]) -> v, remove specified key and return the corresponding value.
+     |      If key is not found, d is returned if given, otherwise KeyError is raised
+     |  
+     |  popitem(self, /)
+     |      Remove and return a (key, value) pair as a 2-tuple.
+     |      
+     |      Pairs are returned in LIFO (last-in, first-out) order.
+     |      Raises KeyError if the dict is empty.
+     |  
+     |  setdefault(self, key, default=None, /)
+     |      Insert key with a value of default if key is not in the dictionary.
+     |      
+     |      Return the value for key if key is in the dictionary, else default.
+     |  
+     |  update(...)
+     |      D.update([E, ]**F) -> None.  Update D from dict/iterable E and F.
+     |      If E is present and has a .keys() method, then does:  for k in E: D[k] = E[k]
+     |      If E is present and lacks a .keys() method, then does:  for k, v in E: D[k] = v
+     |      In either case, this is followed by: for k in F:  D[k] = F[k]
+     |  
+     |  values(...)
+     |      D.values() -> an object providing a view on D's values
+     |  
+     |  ----------------------------------------------------------------------
+     |  Class methods inherited from builtins.dict:
+     |  
+     |  fromkeys(iterable, value=None, /) from builtins.type
+     |      Create a new dictionary with keys from iterable and values set to value.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods inherited from builtins.dict:
+     |  
+     |  __new__(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nlmsg_encoder_generic:
+     |  
+     |  ft_encode(self, offset)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nlmsg_decoder_generic:
+     |  
+     |  ft_decode(self, offset)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nlmsg_atoms:
+     |  
+     |  array = <class 'pyroute2.netlink.nlmsg_atoms.array'>
+     |      Array of simple data type
+     |  
+     |  asciiz = <class 'pyroute2.netlink.nlmsg_atoms.asciiz'>
+     |      Zero-terminated string.
+     |  
+     |  be16 = <class 'pyroute2.netlink.nlmsg_atoms.be16'>
+     |      Generic NLA base class.
+     |  
+     |  be32 = <class 'pyroute2.netlink.nlmsg_atoms.be32'>
+     |      Generic NLA base class.
+     |  
+     |  be64 = <class 'pyroute2.netlink.nlmsg_atoms.be64'>
+     |      Generic NLA base class.
+     |  
+     |  be8 = <class 'pyroute2.netlink.nlmsg_atoms.be8'>
+     |      Generic NLA base class.
+     |  
+     |  binary = <class 'pyroute2.netlink.nlmsg_atoms.cdata'>
+     |      Binary data
+     |  
+     |  cdata = <class 'pyroute2.netlink.nlmsg_atoms.cdata'>
+     |      Binary data
+     |  
+     |  flag = <class 'pyroute2.netlink.nlmsg_atoms.flag'>
+     |      'flag' type is used to denote attrs that have no payload
+     |  
+     |  hex = <class 'pyroute2.netlink.nlmsg_atoms.hex'>
+     |      Represent NLA's content with header as hex string.
+     |  
+     |  int16 = <class 'pyroute2.netlink.nlmsg_atoms.int16'>
+     |      Generic NLA base class.
+     |  
+     |  int32 = <class 'pyroute2.netlink.nlmsg_atoms.int32'>
+     |      Generic NLA base class.
+     |  
+     |  int64 = <class 'pyroute2.netlink.nlmsg_atoms.int64'>
+     |      Generic NLA base class.
+     |  
+     |  int8 = <class 'pyroute2.netlink.nlmsg_atoms.int8'>
+     |      Generic NLA base class.
+     |  
+     |  ip4addr = <class 'pyroute2.netlink.nlmsg_atoms.ip4addr'>
+     |      Explicit IPv4 address type class.
+     |  
+     |  ip6addr = <class 'pyroute2.netlink.nlmsg_atoms.ip6addr'>
+     |      Explicit IPv6 address type class.
+     |  
+     |  ipXaddr = <class 'pyroute2.netlink.nlmsg_atoms.ipXaddr'>
+     |      NLA base class, string decoder.
+     |  
+     |  ipaddr = <class 'pyroute2.netlink.nlmsg_atoms.ipaddr'>
+     |      This class is used to decode IP addresses according to
+     |      the family. Socket library currently supports only two
+     |      families, AF_INET and AF_INET6.
+     |      
+     |      We do not specify here the string size, it will be
+     |      calculated in runtime.
+     |  
+     |  l2addr = <class 'pyroute2.netlink.nlmsg_atoms.l2addr'>
+     |      Decode MAC address.
+     |  
+     |  lladdr = <class 'pyroute2.netlink.nlmsg_atoms.lladdr'>
+     |      Decode link layer address: a MAC, IPv4 or IPv6 address. This type
+     |      depends on the link layer address length:
+     |      
+     |      * 6: MAC addr, string: "52:ff:ff:ff:ff:03"
+     |      * 4: IPv4 addr, string: "127.0.0.1"
+     |      * 16: IPv6 addr, string: "::1"
+     |      * any other length: hex dump
+     |  
+     |  mpls_target = <class 'pyroute2.netlink.nlmsg_atoms.mpls_target'>
+     |      A universal target class. The target type depends on the msg
+     |      family:
+     |      
+     |      * AF_INET: IPv4 addr, string: "127.0.0.1"
+     |      * AF_INET6: IPv6 addr, string: "::1"
+     |      * AF_MPLS: MPLS labels, 0 .. k: [{"label": 0x20, "ttl": 16}, ...]
+     |  
+     |  none = <class 'pyroute2.netlink.nlmsg_atoms.none'>
+     |      'none' type is used to skip decoding of NLA. You can
+     |      also use 'hex' type to dump NLA's content.
+     |  
+     |  nul_string = <class 'pyroute2.netlink.nlmsg_atoms.asciiz'>
+     |      Zero-terminated string.
+     |  
+     |  sbe16 = <class 'pyroute2.netlink.nlmsg_atoms.sbe16'>
+     |      Generic NLA base class.
+     |  
+     |  sbe32 = <class 'pyroute2.netlink.nlmsg_atoms.sbe32'>
+     |      Generic NLA base class.
+     |  
+     |  sbe64 = <class 'pyroute2.netlink.nlmsg_atoms.sbe64'>
+     |      Generic NLA base class.
+     |  
+     |  sbe8 = <class 'pyroute2.netlink.nlmsg_atoms.sbe8'>
+     |      Generic NLA base class.
+     |  
+     |  string = <class 'pyroute2.netlink.nlmsg_atoms.string'>
+     |      UTF-8 string.
+     |  
+     |  target = <class 'pyroute2.netlink.nlmsg_atoms.target'>
+     |      A universal target class. The target type depends on the msg
+     |      family:
+     |      
+     |      * AF_INET: IPv4 addr, string: "127.0.0.1"
+     |      * AF_INET6: IPv6 addr, string: "::1"
+     |      * AF_MPLS: MPLS labels, 0 .. k: [{"label": 0x20, "ttl": 16}, ...]
+     |  
+     |  uint16 = <class 'pyroute2.netlink.nlmsg_atoms.uint16'>
+     |      Generic NLA base class.
+     |  
+     |  uint32 = <class 'pyroute2.netlink.nlmsg_atoms.uint32'>
+     |      Generic NLA base class.
+     |  
+     |  uint64 = <class 'pyroute2.netlink.nlmsg_atoms.uint64'>
+     |      Generic NLA base class.
+     |  
+     |  uint8 = <class 'pyroute2.netlink.nlmsg_atoms.uint8'>
+     |      Generic NLA base class.
+    
+    class options(pyroute2.netlink.rtnl.tcmsg.common.nla_plus_rtab)
+     |  options(data=None, offset=0, length=None, parent=None, init=None)
+     |  
+     |  Main NLA class
+     |  
+     |  Method resolution order:
+     |      options
+     |      pyroute2.netlink.rtnl.tcmsg.common.nla_plus_rtab
+     |      pyroute2.netlink.nla
+     |      pyroute2.netlink.nla_base
+     |      pyroute2.netlink.nla_header
+     |      pyroute2.netlink.nlmsg_base
+     |      builtins.dict
+     |      pyroute2.netlink.nlmsg_encoder_generic
+     |      pyroute2.netlink.nlmsg_decoder_generic
+     |      pyroute2.netlink.nlmsg_atoms
+     |      builtins.object
+     |  
+     |  Data and other attributes defined here:
+     |  
+     |  htb_glob = <class 'pyroute2.netlink.rtnl.tcmsg.sched_htb.options.htb_g...
+     |      Main NLA class
+     |  
+     |  htb_parms = <class 'pyroute2.netlink.rtnl.tcmsg.sched_htb.options.htb_...
+     |      Main NLA class
+     |  
+     |  nla_map = (('TCA_HTB_UNSPEC', 'none'), ('TCA_HTB_PARMS', 'htb_parms'),...
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.rtnl.tcmsg.common.nla_plus_rtab:
+     |  
+     |  ctab = <class 'pyroute2.netlink.rtnl.tcmsg.common.nla_plus_rtab.ctab'>
+     |      NLA + string decoder
+     |  
+     |  parms = <class 'pyroute2.netlink.rtnl.tcmsg.common.nla_plus_rtab.parms...
+     |      Main NLA class
+     |  
+     |  ptab = <class 'pyroute2.netlink.rtnl.tcmsg.common.nla_plus_rtab.ptab'>
+     |      NLA + string decoder
+     |  
+     |  rtab = <class 'pyroute2.netlink.rtnl.tcmsg.common.nla_plus_rtab.rtab'>
+     |      NLA + string decoder
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nla:
+     |  
+     |  decode(self)
+     |      Decode the message. The message should have the `buf`
+     |      attribute initialized. e.g.::
+     |      
+     |          data = sock.recv(16384)
+     |          msg = ifinfmsg(data)
+     |      
+     |      If you want to customize the decoding process, override
+     |      the method, but don't forget to call parent's `decode()`::
+     |      
+     |          class CustomMessage(nlmsg):
+     |      
+     |              def decode(self):
+     |                  nlmsg.decode(self)
+     |                  ...  # do some custom data tuning
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from pyroute2.netlink.nla_base:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nla_base:
+     |  
+     |  zstring = 0
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nla_header:
+     |  
+     |  header = (('length', 'H'), ('type', 'H'))
+     |  
+     |  is_nla = True
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  __and__(self, rvalue)
+     |      Conjunction operation.
+     |  
+     |  __eq__(self, rvalue)
+     |      Having nla, we are able to use it in operations like::
+     |      
+     |          if nla == 'some value':
+     |              ...
+     |  
+     |  __getitem__(self, key)
+     |      x.__getitem__(y) <==> x[y]
+     |  
+     |  __init__(self, data=None, offset=0, length=None, parent=None, init=None)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  __ne__(self, rvalue)
+     |      Return self!=value.
+     |  
+     |  __reduce__(self)
+     |      Helper for pickle.
+     |  
+     |  __setstate__(self, state)
+     |  
+     |  __sub__(self, rvalue)
+     |      Subjunction operation.
+     |  
+     |  compile_nla(self)
+     |  
+     |  copy(self)
+     |      Return a decoded copy of the netlink message. Works
+     |      correctly only if the message was encoded, or is
+     |      received from the socket.
+     |  
+     |  decode_nlas(self, offset)
+     |      Decode the NLA chain. Should not be called manually, since
+     |      it is called from `decode()` routine.
+     |  
+     |  dump(self)
+     |      Dump packet as a dict
+     |  
+     |  encode(self)
+     |      Encode the message into the binary buffer::
+     |      
+     |          msg.encode()
+     |          sock.send(msg.data)
+     |      
+     |      If you want to customize the encoding process, override
+     |      the method::
+     |      
+     |          class CustomMessage(nlmsg):
+     |      
+     |              def encode(self):
+     |                  ...  # do some custom data tuning
+     |                  nlmsg.encode(self)
+     |  
+     |  encode_nlas(self, offset)
+     |      Encode the NLA chain. Should not be called manually, since
+     |      it is called from `encode()` routine.
+     |  
+     |  get(self, key, default=None)
+     |      Universal get() for a netlink message.
+     |  
+     |  get_attr(self, attr, default=None)
+     |      Return the first NLA with that name or None
+     |  
+     |  get_attrs(self, attr)
+     |      Return attrs by name or an empty list
+     |  
+     |  get_encoded(self, attr, default=None)
+     |      Return the first encoded NLA by name
+     |  
+     |  get_nested(self, *keys)
+     |      Return nested NLA or None
+     |  
+     |  getvalue(self)
+     |      Atomic NLAs return their value in the 'value' field,
+     |      not as a dictionary. Complex NLAs return whole dictionary.
+     |  
+     |  load(self, dump)
+     |      Load packet from a dict::
+     |      
+     |          ipr = IPRoute()
+     |          lo = ipr.link('dump', ifname='lo')[0]
+     |          msg_type, msg_value = type(lo), lo.dump()
+     |          ...
+     |          lo = msg_type()
+     |          lo.load(msg_value)
+     |      
+     |      The same methods -- `dump()`/`load()` -- implement the
+     |      pickling protocol for the nlmsg class, see `__reduce__()`
+     |      and `__setstate__()`.
+     |  
+     |  msg_align(self, length)
+     |  
+     |  nla(self, attr=None, default=<class 'pyroute2.netlink.NotInitialized'>)
+     |  
+     |  register_clean_cb(self, cb)
+     |  
+     |  reset(self, buf=None)
+     |  
+     |  setvalue(self, value)
+     |  
+     |  strip(self, attrs)
+     |      Remove an NLA from the attrs chain. The `attrs`
+     |      parameter can be either string, or iterable. In
+     |      the latter case, will be stripped NLAs, specified
+     |      in the provided list.
+     |  
+     |  unregister_clean_cb(self)
+     |  
+     |  valid_nla(self, nla)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Class methods inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  get_size() from builtins.type
+     |  
+     |  name2nla(name) from builtins.type
+     |      Convert human-friendly name into NLA name
+     |      
+     |      Example: address -> IFLA_ADDRESS
+     |      
+     |      Requires self.prefix to be set
+     |  
+     |  nla2name(name) from builtins.type
+     |      Convert NLA name into human-friendly name
+     |      
+     |      Example: IFLA_ADDRESS -> address
+     |      
+     |      Requires self.prefix to be set
+     |  
+     |  sql_schema() from builtins.type
+     |  
+     |  ----------------------------------------------------------------------
+     |  Readonly properties inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  buf
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  chain
+     |  
+     |  data
+     |  
+     |  decoded
+     |  
+     |  length
+     |  
+     |  offset
+     |  
+     |  parent
+     |  
+     |  value
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  __hash__ = None
+     |  
+     |  align = 4
+     |  
+     |  cell_header = None
+     |  
+     |  fields = ()
+     |  
+     |  header_type = None
+     |  
+     |  nla_flags = 0
+     |  
+     |  own_parent = False
+     |  
+     |  pack = None
+     |  
+     |  prefix = None
+     |  
+     |  sql_constraints = {}
+     |  
+     |  sql_extend = ()
+     |  
+     |  sql_extra_fields = ()
+     |  
+     |  value_map = {}
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from builtins.dict:
+     |  
+     |  __contains__(self, key, /)
+     |      True if the dictionary has the specified key, else False.
+     |  
+     |  __delitem__(self, key, /)
+     |      Delete self[key].
+     |  
+     |  __ge__(self, value, /)
+     |      Return self>=value.
+     |  
+     |  __getattribute__(self, name, /)
+     |      Return getattr(self, name).
+     |  
+     |  __gt__(self, value, /)
+     |      Return self>value.
+     |  
+     |  __iter__(self, /)
+     |      Implement iter(self).
+     |  
+     |  __le__(self, value, /)
+     |      Return self<=value.
+     |  
+     |  __len__(self, /)
+     |      Return len(self).
+     |  
+     |  __lt__(self, value, /)
+     |      Return self<value.
+     |  
+     |  __repr__(self, /)
+     |      Return repr(self).
+     |  
+     |  __reversed__(self, /)
+     |      Return a reverse iterator over the dict keys.
+     |  
+     |  __setitem__(self, key, value, /)
+     |      Set self[key] to value.
+     |  
+     |  __sizeof__(...)
+     |      D.__sizeof__() -> size of D in memory, in bytes
+     |  
+     |  clear(...)
+     |      D.clear() -> None.  Remove all items from D.
+     |  
+     |  items(...)
+     |      D.items() -> a set-like object providing a view on D's items
+     |  
+     |  keys(...)
+     |      D.keys() -> a set-like object providing a view on D's keys
+     |  
+     |  pop(...)
+     |      D.pop(k[,d]) -> v, remove specified key and return the corresponding value.
+     |      If key is not found, d is returned if given, otherwise KeyError is raised
+     |  
+     |  popitem(self, /)
+     |      Remove and return a (key, value) pair as a 2-tuple.
+     |      
+     |      Pairs are returned in LIFO (last-in, first-out) order.
+     |      Raises KeyError if the dict is empty.
+     |  
+     |  setdefault(self, key, default=None, /)
+     |      Insert key with a value of default if key is not in the dictionary.
+     |      
+     |      Return the value for key if key is in the dictionary, else default.
+     |  
+     |  update(...)
+     |      D.update([E, ]**F) -> None.  Update D from dict/iterable E and F.
+     |      If E is present and has a .keys() method, then does:  for k in E: D[k] = E[k]
+     |      If E is present and lacks a .keys() method, then does:  for k, v in E: D[k] = v
+     |      In either case, this is followed by: for k in F:  D[k] = F[k]
+     |  
+     |  values(...)
+     |      D.values() -> an object providing a view on D's values
+     |  
+     |  ----------------------------------------------------------------------
+     |  Class methods inherited from builtins.dict:
+     |  
+     |  fromkeys(iterable, value=None, /) from builtins.type
+     |      Create a new dictionary with keys from iterable and values set to value.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods inherited from builtins.dict:
+     |  
+     |  __new__(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nlmsg_encoder_generic:
+     |  
+     |  ft_encode(self, offset)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nlmsg_decoder_generic:
+     |  
+     |  ft_decode(self, offset)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nlmsg_atoms:
+     |  
+     |  array = <class 'pyroute2.netlink.nlmsg_atoms.array'>
+     |      Array of simple data type
+     |  
+     |  asciiz = <class 'pyroute2.netlink.nlmsg_atoms.asciiz'>
+     |      Zero-terminated string.
+     |  
+     |  be16 = <class 'pyroute2.netlink.nlmsg_atoms.be16'>
+     |      Generic NLA base class.
+     |  
+     |  be32 = <class 'pyroute2.netlink.nlmsg_atoms.be32'>
+     |      Generic NLA base class.
+     |  
+     |  be64 = <class 'pyroute2.netlink.nlmsg_atoms.be64'>
+     |      Generic NLA base class.
+     |  
+     |  be8 = <class 'pyroute2.netlink.nlmsg_atoms.be8'>
+     |      Generic NLA base class.
+     |  
+     |  binary = <class 'pyroute2.netlink.nlmsg_atoms.cdata'>
+     |      Binary data
+     |  
+     |  cdata = <class 'pyroute2.netlink.nlmsg_atoms.cdata'>
+     |      Binary data
+     |  
+     |  flag = <class 'pyroute2.netlink.nlmsg_atoms.flag'>
+     |      'flag' type is used to denote attrs that have no payload
+     |  
+     |  hex = <class 'pyroute2.netlink.nlmsg_atoms.hex'>
+     |      Represent NLA's content with header as hex string.
+     |  
+     |  int16 = <class 'pyroute2.netlink.nlmsg_atoms.int16'>
+     |      Generic NLA base class.
+     |  
+     |  int32 = <class 'pyroute2.netlink.nlmsg_atoms.int32'>
+     |      Generic NLA base class.
+     |  
+     |  int64 = <class 'pyroute2.netlink.nlmsg_atoms.int64'>
+     |      Generic NLA base class.
+     |  
+     |  int8 = <class 'pyroute2.netlink.nlmsg_atoms.int8'>
+     |      Generic NLA base class.
+     |  
+     |  ip4addr = <class 'pyroute2.netlink.nlmsg_atoms.ip4addr'>
+     |      Explicit IPv4 address type class.
+     |  
+     |  ip6addr = <class 'pyroute2.netlink.nlmsg_atoms.ip6addr'>
+     |      Explicit IPv6 address type class.
+     |  
+     |  ipXaddr = <class 'pyroute2.netlink.nlmsg_atoms.ipXaddr'>
+     |      NLA base class, string decoder.
+     |  
+     |  ipaddr = <class 'pyroute2.netlink.nlmsg_atoms.ipaddr'>
+     |      This class is used to decode IP addresses according to
+     |      the family. Socket library currently supports only two
+     |      families, AF_INET and AF_INET6.
+     |      
+     |      We do not specify here the string size, it will be
+     |      calculated in runtime.
+     |  
+     |  l2addr = <class 'pyroute2.netlink.nlmsg_atoms.l2addr'>
+     |      Decode MAC address.
+     |  
+     |  lladdr = <class 'pyroute2.netlink.nlmsg_atoms.lladdr'>
+     |      Decode link layer address: a MAC, IPv4 or IPv6 address. This type
+     |      depends on the link layer address length:
+     |      
+     |      * 6: MAC addr, string: "52:ff:ff:ff:ff:03"
+     |      * 4: IPv4 addr, string: "127.0.0.1"
+     |      * 16: IPv6 addr, string: "::1"
+     |      * any other length: hex dump
+     |  
+     |  mpls_target = <class 'pyroute2.netlink.nlmsg_atoms.mpls_target'>
+     |      A universal target class. The target type depends on the msg
+     |      family:
+     |      
+     |      * AF_INET: IPv4 addr, string: "127.0.0.1"
+     |      * AF_INET6: IPv6 addr, string: "::1"
+     |      * AF_MPLS: MPLS labels, 0 .. k: [{"label": 0x20, "ttl": 16}, ...]
+     |  
+     |  none = <class 'pyroute2.netlink.nlmsg_atoms.none'>
+     |      'none' type is used to skip decoding of NLA. You can
+     |      also use 'hex' type to dump NLA's content.
+     |  
+     |  nul_string = <class 'pyroute2.netlink.nlmsg_atoms.asciiz'>
+     |      Zero-terminated string.
+     |  
+     |  sbe16 = <class 'pyroute2.netlink.nlmsg_atoms.sbe16'>
+     |      Generic NLA base class.
+     |  
+     |  sbe32 = <class 'pyroute2.netlink.nlmsg_atoms.sbe32'>
+     |      Generic NLA base class.
+     |  
+     |  sbe64 = <class 'pyroute2.netlink.nlmsg_atoms.sbe64'>
+     |      Generic NLA base class.
+     |  
+     |  sbe8 = <class 'pyroute2.netlink.nlmsg_atoms.sbe8'>
+     |      Generic NLA base class.
+     |  
+     |  string = <class 'pyroute2.netlink.nlmsg_atoms.string'>
+     |      UTF-8 string.
+     |  
+     |  target = <class 'pyroute2.netlink.nlmsg_atoms.target'>
+     |      A universal target class. The target type depends on the msg
+     |      family:
+     |      
+     |      * AF_INET: IPv4 addr, string: "127.0.0.1"
+     |      * AF_INET6: IPv6 addr, string: "::1"
+     |      * AF_MPLS: MPLS labels, 0 .. k: [{"label": 0x20, "ttl": 16}, ...]
+     |  
+     |  uint16 = <class 'pyroute2.netlink.nlmsg_atoms.uint16'>
+     |      Generic NLA base class.
+     |  
+     |  uint32 = <class 'pyroute2.netlink.nlmsg_atoms.uint32'>
+     |      Generic NLA base class.
+     |  
+     |  uint64 = <class 'pyroute2.netlink.nlmsg_atoms.uint64'>
+     |      Generic NLA base class.
+     |  
+     |  uint8 = <class 'pyroute2.netlink.nlmsg_atoms.uint8'>
+     |      Generic NLA base class.
+    
+    class qdisc_stats2(pyroute2.netlink.rtnl.tcmsg.common.stats2)
+     |  qdisc_stats2(data=None, offset=0, length=None, parent=None, init=None)
+     |  
+     |  Main NLA class
+     |  
+     |  Method resolution order:
+     |      qdisc_stats2
+     |      pyroute2.netlink.rtnl.tcmsg.common.stats2
+     |      pyroute2.netlink.nla
+     |      pyroute2.netlink.nla_base
+     |      pyroute2.netlink.nla_header
+     |      pyroute2.netlink.nlmsg_base
+     |      builtins.dict
+     |      pyroute2.netlink.nlmsg_encoder_generic
+     |      pyroute2.netlink.nlmsg_decoder_generic
+     |      pyroute2.netlink.nlmsg_atoms
+     |      builtins.object
+     |  
+     |  Data and other attributes defined here:
+     |  
+     |  nla_map = (('TCA_STATS_UNSPEC', 'none'), ('TCA_STATS_BASIC', 'basic'),...
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.rtnl.tcmsg.common.stats2:
+     |  
+     |  basic = <class 'pyroute2.netlink.rtnl.tcmsg.common.stats2.basic'>
+     |      Main NLA class
+     |  
+     |  queue = <class 'pyroute2.netlink.rtnl.tcmsg.common.stats2.queue'>
+     |      Main NLA class
+     |  
+     |  rate_est = <class 'pyroute2.netlink.rtnl.tcmsg.common.stats2.rate_est'...
+     |      Main NLA class
+     |  
+     |  stats_app = <class 'pyroute2.netlink.rtnl.tcmsg.common.stats2.stats_ap...
+     |      Represent NLA's content with header as hex string.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nla:
+     |  
+     |  decode(self)
+     |      Decode the message. The message should have the `buf`
+     |      attribute initialized. e.g.::
+     |      
+     |          data = sock.recv(16384)
+     |          msg = ifinfmsg(data)
+     |      
+     |      If you want to customize the decoding process, override
+     |      the method, but don't forget to call parent's `decode()`::
+     |      
+     |          class CustomMessage(nlmsg):
+     |      
+     |              def decode(self):
+     |                  nlmsg.decode(self)
+     |                  ...  # do some custom data tuning
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from pyroute2.netlink.nla_base:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nla_base:
+     |  
+     |  zstring = 0
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nla_header:
+     |  
+     |  header = (('length', 'H'), ('type', 'H'))
+     |  
+     |  is_nla = True
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  __and__(self, rvalue)
+     |      Conjunction operation.
+     |  
+     |  __eq__(self, rvalue)
+     |      Having nla, we are able to use it in operations like::
+     |      
+     |          if nla == 'some value':
+     |              ...
+     |  
+     |  __getitem__(self, key)
+     |      x.__getitem__(y) <==> x[y]
+     |  
+     |  __init__(self, data=None, offset=0, length=None, parent=None, init=None)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  __ne__(self, rvalue)
+     |      Return self!=value.
+     |  
+     |  __reduce__(self)
+     |      Helper for pickle.
+     |  
+     |  __setstate__(self, state)
+     |  
+     |  __sub__(self, rvalue)
+     |      Subjunction operation.
+     |  
+     |  compile_nla(self)
+     |  
+     |  copy(self)
+     |      Return a decoded copy of the netlink message. Works
+     |      correctly only if the message was encoded, or is
+     |      received from the socket.
+     |  
+     |  decode_nlas(self, offset)
+     |      Decode the NLA chain. Should not be called manually, since
+     |      it is called from `decode()` routine.
+     |  
+     |  dump(self)
+     |      Dump packet as a dict
+     |  
+     |  encode(self)
+     |      Encode the message into the binary buffer::
+     |      
+     |          msg.encode()
+     |          sock.send(msg.data)
+     |      
+     |      If you want to customize the encoding process, override
+     |      the method::
+     |      
+     |          class CustomMessage(nlmsg):
+     |      
+     |              def encode(self):
+     |                  ...  # do some custom data tuning
+     |                  nlmsg.encode(self)
+     |  
+     |  encode_nlas(self, offset)
+     |      Encode the NLA chain. Should not be called manually, since
+     |      it is called from `encode()` routine.
+     |  
+     |  get(self, key, default=None)
+     |      Universal get() for a netlink message.
+     |  
+     |  get_attr(self, attr, default=None)
+     |      Return the first NLA with that name or None
+     |  
+     |  get_attrs(self, attr)
+     |      Return attrs by name or an empty list
+     |  
+     |  get_encoded(self, attr, default=None)
+     |      Return the first encoded NLA by name
+     |  
+     |  get_nested(self, *keys)
+     |      Return nested NLA or None
+     |  
+     |  getvalue(self)
+     |      Atomic NLAs return their value in the 'value' field,
+     |      not as a dictionary. Complex NLAs return whole dictionary.
+     |  
+     |  load(self, dump)
+     |      Load packet from a dict::
+     |      
+     |          ipr = IPRoute()
+     |          lo = ipr.link('dump', ifname='lo')[0]
+     |          msg_type, msg_value = type(lo), lo.dump()
+     |          ...
+     |          lo = msg_type()
+     |          lo.load(msg_value)
+     |      
+     |      The same methods -- `dump()`/`load()` -- implement the
+     |      pickling protocol for the nlmsg class, see `__reduce__()`
+     |      and `__setstate__()`.
+     |  
+     |  msg_align(self, length)
+     |  
+     |  nla(self, attr=None, default=<class 'pyroute2.netlink.NotInitialized'>)
+     |  
+     |  register_clean_cb(self, cb)
+     |  
+     |  reset(self, buf=None)
+     |  
+     |  setvalue(self, value)
+     |  
+     |  strip(self, attrs)
+     |      Remove an NLA from the attrs chain. The `attrs`
+     |      parameter can be either string, or iterable. In
+     |      the latter case, will be stripped NLAs, specified
+     |      in the provided list.
+     |  
+     |  unregister_clean_cb(self)
+     |  
+     |  valid_nla(self, nla)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Class methods inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  get_size() from builtins.type
+     |  
+     |  name2nla(name) from builtins.type
+     |      Convert human-friendly name into NLA name
+     |      
+     |      Example: address -> IFLA_ADDRESS
+     |      
+     |      Requires self.prefix to be set
+     |  
+     |  nla2name(name) from builtins.type
+     |      Convert NLA name into human-friendly name
+     |      
+     |      Example: IFLA_ADDRESS -> address
+     |      
+     |      Requires self.prefix to be set
+     |  
+     |  sql_schema() from builtins.type
+     |  
+     |  ----------------------------------------------------------------------
+     |  Readonly properties inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  buf
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  chain
+     |  
+     |  data
+     |  
+     |  decoded
+     |  
+     |  length
+     |  
+     |  offset
+     |  
+     |  parent
+     |  
+     |  value
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  __hash__ = None
+     |  
+     |  align = 4
+     |  
+     |  cell_header = None
+     |  
+     |  fields = ()
+     |  
+     |  header_type = None
+     |  
+     |  nla_flags = 0
+     |  
+     |  own_parent = False
+     |  
+     |  pack = None
+     |  
+     |  prefix = None
+     |  
+     |  sql_constraints = {}
+     |  
+     |  sql_extend = ()
+     |  
+     |  sql_extra_fields = ()
+     |  
+     |  value_map = {}
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from builtins.dict:
+     |  
+     |  __contains__(self, key, /)
+     |      True if the dictionary has the specified key, else False.
+     |  
+     |  __delitem__(self, key, /)
+     |      Delete self[key].
+     |  
+     |  __ge__(self, value, /)
+     |      Return self>=value.
+     |  
+     |  __getattribute__(self, name, /)
+     |      Return getattr(self, name).
+     |  
+     |  __gt__(self, value, /)
+     |      Return self>value.
+     |  
+     |  __iter__(self, /)
+     |      Implement iter(self).
+     |  
+     |  __le__(self, value, /)
+     |      Return self<=value.
+     |  
+     |  __len__(self, /)
+     |      Return len(self).
+     |  
+     |  __lt__(self, value, /)
+     |      Return self<value.
+     |  
+     |  __repr__(self, /)
+     |      Return repr(self).
+     |  
+     |  __reversed__(self, /)
+     |      Return a reverse iterator over the dict keys.
+     |  
+     |  __setitem__(self, key, value, /)
+     |      Set self[key] to value.
+     |  
+     |  __sizeof__(...)
+     |      D.__sizeof__() -> size of D in memory, in bytes
+     |  
+     |  clear(...)
+     |      D.clear() -> None.  Remove all items from D.
+     |  
+     |  items(...)
+     |      D.items() -> a set-like object providing a view on D's items
+     |  
+     |  keys(...)
+     |      D.keys() -> a set-like object providing a view on D's keys
+     |  
+     |  pop(...)
+     |      D.pop(k[,d]) -> v, remove specified key and return the corresponding value.
+     |      If key is not found, d is returned if given, otherwise KeyError is raised
+     |  
+     |  popitem(self, /)
+     |      Remove and return a (key, value) pair as a 2-tuple.
+     |      
+     |      Pairs are returned in LIFO (last-in, first-out) order.
+     |      Raises KeyError if the dict is empty.
+     |  
+     |  setdefault(self, key, default=None, /)
+     |      Insert key with a value of default if key is not in the dictionary.
+     |      
+     |      Return the value for key if key is in the dictionary, else default.
+     |  
+     |  update(...)
+     |      D.update([E, ]**F) -> None.  Update D from dict/iterable E and F.
+     |      If E is present and has a .keys() method, then does:  for k in E: D[k] = E[k]
+     |      If E is present and lacks a .keys() method, then does:  for k, v in E: D[k] = v
+     |      In either case, this is followed by: for k in F:  D[k] = F[k]
+     |  
+     |  values(...)
+     |      D.values() -> an object providing a view on D's values
+     |  
+     |  ----------------------------------------------------------------------
+     |  Class methods inherited from builtins.dict:
+     |  
+     |  fromkeys(iterable, value=None, /) from builtins.type
+     |      Create a new dictionary with keys from iterable and values set to value.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods inherited from builtins.dict:
+     |  
+     |  __new__(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nlmsg_encoder_generic:
+     |  
+     |  ft_encode(self, offset)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nlmsg_decoder_generic:
+     |  
+     |  ft_decode(self, offset)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nlmsg_atoms:
+     |  
+     |  array = <class 'pyroute2.netlink.nlmsg_atoms.array'>
+     |      Array of simple data type
+     |  
+     |  asciiz = <class 'pyroute2.netlink.nlmsg_atoms.asciiz'>
+     |      Zero-terminated string.
+     |  
+     |  be16 = <class 'pyroute2.netlink.nlmsg_atoms.be16'>
+     |      Generic NLA base class.
+     |  
+     |  be32 = <class 'pyroute2.netlink.nlmsg_atoms.be32'>
+     |      Generic NLA base class.
+     |  
+     |  be64 = <class 'pyroute2.netlink.nlmsg_atoms.be64'>
+     |      Generic NLA base class.
+     |  
+     |  be8 = <class 'pyroute2.netlink.nlmsg_atoms.be8'>
+     |      Generic NLA base class.
+     |  
+     |  binary = <class 'pyroute2.netlink.nlmsg_atoms.cdata'>
+     |      Binary data
+     |  
+     |  cdata = <class 'pyroute2.netlink.nlmsg_atoms.cdata'>
+     |      Binary data
+     |  
+     |  flag = <class 'pyroute2.netlink.nlmsg_atoms.flag'>
+     |      'flag' type is used to denote attrs that have no payload
+     |  
+     |  hex = <class 'pyroute2.netlink.nlmsg_atoms.hex'>
+     |      Represent NLA's content with header as hex string.
+     |  
+     |  int16 = <class 'pyroute2.netlink.nlmsg_atoms.int16'>
+     |      Generic NLA base class.
+     |  
+     |  int32 = <class 'pyroute2.netlink.nlmsg_atoms.int32'>
+     |      Generic NLA base class.
+     |  
+     |  int64 = <class 'pyroute2.netlink.nlmsg_atoms.int64'>
+     |      Generic NLA base class.
+     |  
+     |  int8 = <class 'pyroute2.netlink.nlmsg_atoms.int8'>
+     |      Generic NLA base class.
+     |  
+     |  ip4addr = <class 'pyroute2.netlink.nlmsg_atoms.ip4addr'>
+     |      Explicit IPv4 address type class.
+     |  
+     |  ip6addr = <class 'pyroute2.netlink.nlmsg_atoms.ip6addr'>
+     |      Explicit IPv6 address type class.
+     |  
+     |  ipXaddr = <class 'pyroute2.netlink.nlmsg_atoms.ipXaddr'>
+     |      NLA base class, string decoder.
+     |  
+     |  ipaddr = <class 'pyroute2.netlink.nlmsg_atoms.ipaddr'>
+     |      This class is used to decode IP addresses according to
+     |      the family. Socket library currently supports only two
+     |      families, AF_INET and AF_INET6.
+     |      
+     |      We do not specify here the string size, it will be
+     |      calculated in runtime.
+     |  
+     |  l2addr = <class 'pyroute2.netlink.nlmsg_atoms.l2addr'>
+     |      Decode MAC address.
+     |  
+     |  lladdr = <class 'pyroute2.netlink.nlmsg_atoms.lladdr'>
+     |      Decode link layer address: a MAC, IPv4 or IPv6 address. This type
+     |      depends on the link layer address length:
+     |      
+     |      * 6: MAC addr, string: "52:ff:ff:ff:ff:03"
+     |      * 4: IPv4 addr, string: "127.0.0.1"
+     |      * 16: IPv6 addr, string: "::1"
+     |      * any other length: hex dump
+     |  
+     |  mpls_target = <class 'pyroute2.netlink.nlmsg_atoms.mpls_target'>
+     |      A universal target class. The target type depends on the msg
+     |      family:
+     |      
+     |      * AF_INET: IPv4 addr, string: "127.0.0.1"
+     |      * AF_INET6: IPv6 addr, string: "::1"
+     |      * AF_MPLS: MPLS labels, 0 .. k: [{"label": 0x20, "ttl": 16}, ...]
+     |  
+     |  none = <class 'pyroute2.netlink.nlmsg_atoms.none'>
+     |      'none' type is used to skip decoding of NLA. You can
+     |      also use 'hex' type to dump NLA's content.
+     |  
+     |  nul_string = <class 'pyroute2.netlink.nlmsg_atoms.asciiz'>
+     |      Zero-terminated string.
+     |  
+     |  sbe16 = <class 'pyroute2.netlink.nlmsg_atoms.sbe16'>
+     |      Generic NLA base class.
+     |  
+     |  sbe32 = <class 'pyroute2.netlink.nlmsg_atoms.sbe32'>
+     |      Generic NLA base class.
+     |  
+     |  sbe64 = <class 'pyroute2.netlink.nlmsg_atoms.sbe64'>
+     |      Generic NLA base class.
+     |  
+     |  sbe8 = <class 'pyroute2.netlink.nlmsg_atoms.sbe8'>
+     |      Generic NLA base class.
+     |  
+     |  string = <class 'pyroute2.netlink.nlmsg_atoms.string'>
+     |      UTF-8 string.
+     |  
+     |  target = <class 'pyroute2.netlink.nlmsg_atoms.target'>
+     |      A universal target class. The target type depends on the msg
+     |      family:
+     |      
+     |      * AF_INET: IPv4 addr, string: "127.0.0.1"
+     |      * AF_INET6: IPv6 addr, string: "::1"
+     |      * AF_MPLS: MPLS labels, 0 .. k: [{"label": 0x20, "ttl": 16}, ...]
+     |  
+     |  uint16 = <class 'pyroute2.netlink.nlmsg_atoms.uint16'>
+     |      Generic NLA base class.
+     |  
+     |  uint32 = <class 'pyroute2.netlink.nlmsg_atoms.uint32'>
+     |      Generic NLA base class.
+     |  
+     |  uint64 = <class 'pyroute2.netlink.nlmsg_atoms.uint64'>
+     |      Generic NLA base class.
+     |  
+     |  uint8 = <class 'pyroute2.netlink.nlmsg_atoms.uint8'>
+     |      Generic NLA base class.
+    
+    class stats(pyroute2.netlink.nla)
+     |  stats(data=None, offset=0, length=None, parent=None, init=None)
+     |  
+     |  Main NLA class
+     |  
+     |  Method resolution order:
+     |      stats
+     |      pyroute2.netlink.nla
+     |      pyroute2.netlink.nla_base
+     |      pyroute2.netlink.nla_header
+     |      pyroute2.netlink.nlmsg_base
+     |      builtins.dict
+     |      pyroute2.netlink.nlmsg_encoder_generic
+     |      pyroute2.netlink.nlmsg_decoder_generic
+     |      pyroute2.netlink.nlmsg_atoms
+     |      builtins.object
+     |  
+     |  Data and other attributes defined here:
+     |  
+     |  fields = (('lends', 'I'), ('borrows', 'I'), ('giants', 'I'), ('tokens'...
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nla:
+     |  
+     |  decode(self)
+     |      Decode the message. The message should have the `buf`
+     |      attribute initialized. e.g.::
+     |      
+     |          data = sock.recv(16384)
+     |          msg = ifinfmsg(data)
+     |      
+     |      If you want to customize the decoding process, override
+     |      the method, but don't forget to call parent's `decode()`::
+     |      
+     |          class CustomMessage(nlmsg):
+     |      
+     |              def decode(self):
+     |                  nlmsg.decode(self)
+     |                  ...  # do some custom data tuning
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from pyroute2.netlink.nla_base:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nla_base:
+     |  
+     |  zstring = 0
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nla_header:
+     |  
+     |  header = (('length', 'H'), ('type', 'H'))
+     |  
+     |  is_nla = True
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  __and__(self, rvalue)
+     |      Conjunction operation.
+     |  
+     |  __eq__(self, rvalue)
+     |      Having nla, we are able to use it in operations like::
+     |      
+     |          if nla == 'some value':
+     |              ...
+     |  
+     |  __getitem__(self, key)
+     |      x.__getitem__(y) <==> x[y]
+     |  
+     |  __init__(self, data=None, offset=0, length=None, parent=None, init=None)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  __ne__(self, rvalue)
+     |      Return self!=value.
+     |  
+     |  __reduce__(self)
+     |      Helper for pickle.
+     |  
+     |  __setstate__(self, state)
+     |  
+     |  __sub__(self, rvalue)
+     |      Subjunction operation.
+     |  
+     |  compile_nla(self)
+     |  
+     |  copy(self)
+     |      Return a decoded copy of the netlink message. Works
+     |      correctly only if the message was encoded, or is
+     |      received from the socket.
+     |  
+     |  decode_nlas(self, offset)
+     |      Decode the NLA chain. Should not be called manually, since
+     |      it is called from `decode()` routine.
+     |  
+     |  dump(self)
+     |      Dump packet as a dict
+     |  
+     |  encode(self)
+     |      Encode the message into the binary buffer::
+     |      
+     |          msg.encode()
+     |          sock.send(msg.data)
+     |      
+     |      If you want to customize the encoding process, override
+     |      the method::
+     |      
+     |          class CustomMessage(nlmsg):
+     |      
+     |              def encode(self):
+     |                  ...  # do some custom data tuning
+     |                  nlmsg.encode(self)
+     |  
+     |  encode_nlas(self, offset)
+     |      Encode the NLA chain. Should not be called manually, since
+     |      it is called from `encode()` routine.
+     |  
+     |  get(self, key, default=None)
+     |      Universal get() for a netlink message.
+     |  
+     |  get_attr(self, attr, default=None)
+     |      Return the first NLA with that name or None
+     |  
+     |  get_attrs(self, attr)
+     |      Return attrs by name or an empty list
+     |  
+     |  get_encoded(self, attr, default=None)
+     |      Return the first encoded NLA by name
+     |  
+     |  get_nested(self, *keys)
+     |      Return nested NLA or None
+     |  
+     |  getvalue(self)
+     |      Atomic NLAs return their value in the 'value' field,
+     |      not as a dictionary. Complex NLAs return whole dictionary.
+     |  
+     |  load(self, dump)
+     |      Load packet from a dict::
+     |      
+     |          ipr = IPRoute()
+     |          lo = ipr.link('dump', ifname='lo')[0]
+     |          msg_type, msg_value = type(lo), lo.dump()
+     |          ...
+     |          lo = msg_type()
+     |          lo.load(msg_value)
+     |      
+     |      The same methods -- `dump()`/`load()` -- implement the
+     |      pickling protocol for the nlmsg class, see `__reduce__()`
+     |      and `__setstate__()`.
+     |  
+     |  msg_align(self, length)
+     |  
+     |  nla(self, attr=None, default=<class 'pyroute2.netlink.NotInitialized'>)
+     |  
+     |  register_clean_cb(self, cb)
+     |  
+     |  reset(self, buf=None)
+     |  
+     |  setvalue(self, value)
+     |  
+     |  strip(self, attrs)
+     |      Remove an NLA from the attrs chain. The `attrs`
+     |      parameter can be either string, or iterable. In
+     |      the latter case, will be stripped NLAs, specified
+     |      in the provided list.
+     |  
+     |  unregister_clean_cb(self)
+     |  
+     |  valid_nla(self, nla)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Class methods inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  get_size() from builtins.type
+     |  
+     |  name2nla(name) from builtins.type
+     |      Convert human-friendly name into NLA name
+     |      
+     |      Example: address -> IFLA_ADDRESS
+     |      
+     |      Requires self.prefix to be set
+     |  
+     |  nla2name(name) from builtins.type
+     |      Convert NLA name into human-friendly name
+     |      
+     |      Example: IFLA_ADDRESS -> address
+     |      
+     |      Requires self.prefix to be set
+     |  
+     |  sql_schema() from builtins.type
+     |  
+     |  ----------------------------------------------------------------------
+     |  Readonly properties inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  buf
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  chain
+     |  
+     |  data
+     |  
+     |  decoded
+     |  
+     |  length
+     |  
+     |  offset
+     |  
+     |  parent
+     |  
+     |  value
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nlmsg_base:
+     |  
+     |  __hash__ = None
+     |  
+     |  align = 4
+     |  
+     |  cell_header = None
+     |  
+     |  header_type = None
+     |  
+     |  nla_flags = 0
+     |  
+     |  nla_map = {}
+     |  
+     |  own_parent = False
+     |  
+     |  pack = None
+     |  
+     |  prefix = None
+     |  
+     |  sql_constraints = {}
+     |  
+     |  sql_extend = ()
+     |  
+     |  sql_extra_fields = ()
+     |  
+     |  value_map = {}
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from builtins.dict:
+     |  
+     |  __contains__(self, key, /)
+     |      True if the dictionary has the specified key, else False.
+     |  
+     |  __delitem__(self, key, /)
+     |      Delete self[key].
+     |  
+     |  __ge__(self, value, /)
+     |      Return self>=value.
+     |  
+     |  __getattribute__(self, name, /)
+     |      Return getattr(self, name).
+     |  
+     |  __gt__(self, value, /)
+     |      Return self>value.
+     |  
+     |  __iter__(self, /)
+     |      Implement iter(self).
+     |  
+     |  __le__(self, value, /)
+     |      Return self<=value.
+     |  
+     |  __len__(self, /)
+     |      Return len(self).
+     |  
+     |  __lt__(self, value, /)
+     |      Return self<value.
+     |  
+     |  __repr__(self, /)
+     |      Return repr(self).
+     |  
+     |  __reversed__(self, /)
+     |      Return a reverse iterator over the dict keys.
+     |  
+     |  __setitem__(self, key, value, /)
+     |      Set self[key] to value.
+     |  
+     |  __sizeof__(...)
+     |      D.__sizeof__() -> size of D in memory, in bytes
+     |  
+     |  clear(...)
+     |      D.clear() -> None.  Remove all items from D.
+     |  
+     |  items(...)
+     |      D.items() -> a set-like object providing a view on D's items
+     |  
+     |  keys(...)
+     |      D.keys() -> a set-like object providing a view on D's keys
+     |  
+     |  pop(...)
+     |      D.pop(k[,d]) -> v, remove specified key and return the corresponding value.
+     |      If key is not found, d is returned if given, otherwise KeyError is raised
+     |  
+     |  popitem(self, /)
+     |      Remove and return a (key, value) pair as a 2-tuple.
+     |      
+     |      Pairs are returned in LIFO (last-in, first-out) order.
+     |      Raises KeyError if the dict is empty.
+     |  
+     |  setdefault(self, key, default=None, /)
+     |      Insert key with a value of default if key is not in the dictionary.
+     |      
+     |      Return the value for key if key is in the dictionary, else default.
+     |  
+     |  update(...)
+     |      D.update([E, ]**F) -> None.  Update D from dict/iterable E and F.
+     |      If E is present and has a .keys() method, then does:  for k in E: D[k] = E[k]
+     |      If E is present and lacks a .keys() method, then does:  for k, v in E: D[k] = v
+     |      In either case, this is followed by: for k in F:  D[k] = F[k]
+     |  
+     |  values(...)
+     |      D.values() -> an object providing a view on D's values
+     |  
+     |  ----------------------------------------------------------------------
+     |  Class methods inherited from builtins.dict:
+     |  
+     |  fromkeys(iterable, value=None, /) from builtins.type
+     |      Create a new dictionary with keys from iterable and values set to value.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods inherited from builtins.dict:
+     |  
+     |  __new__(*args, **kwargs) from builtins.type
+     |      Create and return a new object.  See help(type) for accurate signature.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nlmsg_encoder_generic:
+     |  
+     |  ft_encode(self, offset)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pyroute2.netlink.nlmsg_decoder_generic:
+     |  
+     |  ft_decode(self, offset)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pyroute2.netlink.nlmsg_atoms:
+     |  
+     |  array = <class 'pyroute2.netlink.nlmsg_atoms.array'>
+     |      Array of simple data type
+     |  
+     |  asciiz = <class 'pyroute2.netlink.nlmsg_atoms.asciiz'>
+     |      Zero-terminated string.
+     |  
+     |  be16 = <class 'pyroute2.netlink.nlmsg_atoms.be16'>
+     |      Generic NLA base class.
+     |  
+     |  be32 = <class 'pyroute2.netlink.nlmsg_atoms.be32'>
+     |      Generic NLA base class.
+     |  
+     |  be64 = <class 'pyroute2.netlink.nlmsg_atoms.be64'>
+     |      Generic NLA base class.
+     |  
+     |  be8 = <class 'pyroute2.netlink.nlmsg_atoms.be8'>
+     |      Generic NLA base class.
+     |  
+     |  binary = <class 'pyroute2.netlink.nlmsg_atoms.cdata'>
+     |      Binary data
+     |  
+     |  cdata = <class 'pyroute2.netlink.nlmsg_atoms.cdata'>
+     |      Binary data
+     |  
+     |  flag = <class 'pyroute2.netlink.nlmsg_atoms.flag'>
+     |      'flag' type is used to denote attrs that have no payload
+     |  
+     |  hex = <class 'pyroute2.netlink.nlmsg_atoms.hex'>
+     |      Represent NLA's content with header as hex string.
+     |  
+     |  int16 = <class 'pyroute2.netlink.nlmsg_atoms.int16'>
+     |      Generic NLA base class.
+     |  
+     |  int32 = <class 'pyroute2.netlink.nlmsg_atoms.int32'>
+     |      Generic NLA base class.
+     |  
+     |  int64 = <class 'pyroute2.netlink.nlmsg_atoms.int64'>
+     |      Generic NLA base class.
+     |  
+     |  int8 = <class 'pyroute2.netlink.nlmsg_atoms.int8'>
+     |      Generic NLA base class.
+     |  
+     |  ip4addr = <class 'pyroute2.netlink.nlmsg_atoms.ip4addr'>
+     |      Explicit IPv4 address type class.
+     |  
+     |  ip6addr = <class 'pyroute2.netlink.nlmsg_atoms.ip6addr'>
+     |      Explicit IPv6 address type class.
+     |  
+     |  ipXaddr = <class 'pyroute2.netlink.nlmsg_atoms.ipXaddr'>
+     |      NLA base class, string decoder.
+     |  
+     |  ipaddr = <class 'pyroute2.netlink.nlmsg_atoms.ipaddr'>
+     |      This class is used to decode IP addresses according to
+     |      the family. Socket library currently supports only two
+     |      families, AF_INET and AF_INET6.
+     |      
+     |      We do not specify here the string size, it will be
+     |      calculated in runtime.
+     |  
+     |  l2addr = <class 'pyroute2.netlink.nlmsg_atoms.l2addr'>
+     |      Decode MAC address.
+     |  
+     |  lladdr = <class 'pyroute2.netlink.nlmsg_atoms.lladdr'>
+     |      Decode link layer address: a MAC, IPv4 or IPv6 address. This type
+     |      depends on the link layer address length:
+     |      
+     |      * 6: MAC addr, string: "52:ff:ff:ff:ff:03"
+     |      * 4: IPv4 addr, string: "127.0.0.1"
+     |      * 16: IPv6 addr, string: "::1"
+     |      * any other length: hex dump
+     |  
+     |  mpls_target = <class 'pyroute2.netlink.nlmsg_atoms.mpls_target'>
+     |      A universal target class. The target type depends on the msg
+     |      family:
+     |      
+     |      * AF_INET: IPv4 addr, string: "127.0.0.1"
+     |      * AF_INET6: IPv6 addr, string: "::1"
+     |      * AF_MPLS: MPLS labels, 0 .. k: [{"label": 0x20, "ttl": 16}, ...]
+     |  
+     |  none = <class 'pyroute2.netlink.nlmsg_atoms.none'>
+     |      'none' type is used to skip decoding of NLA. You can
+     |      also use 'hex' type to dump NLA's content.
+     |  
+     |  nul_string = <class 'pyroute2.netlink.nlmsg_atoms.asciiz'>
+     |      Zero-terminated string.
+     |  
+     |  sbe16 = <class 'pyroute2.netlink.nlmsg_atoms.sbe16'>
+     |      Generic NLA base class.
+     |  
+     |  sbe32 = <class 'pyroute2.netlink.nlmsg_atoms.sbe32'>
+     |      Generic NLA base class.
+     |  
+     |  sbe64 = <class 'pyroute2.netlink.nlmsg_atoms.sbe64'>
+     |      Generic NLA base class.
+     |  
+     |  sbe8 = <class 'pyroute2.netlink.nlmsg_atoms.sbe8'>
+     |      Generic NLA base class.
+     |  
+     |  string = <class 'pyroute2.netlink.nlmsg_atoms.string'>
+     |      UTF-8 string.
+     |  
+     |  target = <class 'pyroute2.netlink.nlmsg_atoms.target'>
+     |      A universal target class. The target type depends on the msg
+     |      family:
+     |      
+     |      * AF_INET: IPv4 addr, string: "127.0.0.1"
+     |      * AF_INET6: IPv6 addr, string: "::1"
+     |      * AF_MPLS: MPLS labels, 0 .. k: [{"label": 0x20, "ttl": 16}, ...]
+     |  
+     |  uint16 = <class 'pyroute2.netlink.nlmsg_atoms.uint16'>
+     |      Generic NLA base class.
+     |  
+     |  uint32 = <class 'pyroute2.netlink.nlmsg_atoms.uint32'>
+     |      Generic NLA base class.
+     |  
+     |  uint64 = <class 'pyroute2.netlink.nlmsg_atoms.uint64'>
+     |      Generic NLA base class.
+     |  
+     |  uint8 = <class 'pyroute2.netlink.nlmsg_atoms.uint8'>
+     |      Generic NLA base class.
+
+FUNCTIONS
+    fix_msg(msg, kwarg)
+    
+    get_class_parameters(kwarg)
+    
+    get_parameters(kwarg)
+    
+    stats2(msg, *argv, **kwarg)
+
+DATA
+    RTM_DELQDISC = 37
+    RTM_NEWQDISC = 36
+    TC_H_ROOT = 4294967295
+    parent = 4294967295
+
+FILE
+    /usr/local/lib/python3.8/dist-packages/pyroute2/netlink/rtnl/tcmsg/sched_htb.py
+
